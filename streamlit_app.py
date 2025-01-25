@@ -1,19 +1,20 @@
 import streamlit as st
 import pandas as pd
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials
 from datetime import datetime, date
 
-# Google Sheets setup
-def connect_to_google_sheets():
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
-    client = gspread.authorize(creds)
-    return client
+# Define the scope
+scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+
+# Load credentials from Streamlit Secrets
+credentials = Credentials.from_service_account_info(st.secrets["google_sheets"], scopes=scope)
+
+# Authorize gspread
+client = gspread.authorize(credentials)
 
 # Append data to Google Sheets
 def append_to_google_sheets(data, sheet_name="Downtime Data"):
-    client = connect_to_google_sheets()
     try:
         spreadsheet = client.open(sheet_name)
         worksheet = spreadsheet.sheet1  # Use the first sheet
@@ -29,7 +30,6 @@ def append_to_google_sheets(data, sheet_name="Downtime Data"):
 
 # Load data from Google Sheets
 def load_from_google_sheets(sheet_name="Downtime Data"):
-    client = connect_to_google_sheets()
     try:
         spreadsheet = client.open(sheet_name)
         worksheet = spreadsheet.sheet1  # Use the first sheet
