@@ -94,18 +94,29 @@ if not st.session_state.data.empty:
     if st.button("Append Data to Google Sheets"):
         append_to_google_sheets(st.session_state.data)
 
-# Display current graphs
-if st.button("Review Current Charts"):
-    sheet_data = load_from_google_sheets()
-    if not sheet_data.empty:
+# Select date for trend analysis
+st.subheader("Review Downtime Trends")
+selected_date = st.date_input("Select Date for Analysis", value=date.today())
+
+# Display current data from Google Sheets for the selected date
+sheet_data = load_from_google_sheets()
+if not sheet_data.empty:
+    filtered_data = sheet_data[sheet_data["Date"] == selected_date.strftime("%Y-%m-%d")]
+
+    st.subheader(f"Downtime Data for {selected_date.strftime('%Y-%m-%d')}")
+    st.dataframe(filtered_data)
+
+    if not filtered_data.empty:
         st.subheader("Defect Type Trends")
-        defect_counts = sheet_data.groupby("Downtime Reason").size()
+        defect_counts = filtered_data.groupby("Downtime Reason").size()
         st.bar_chart(defect_counts)
 
         st.subheader("Process Name Trends")
-        process_counts = sheet_data.groupby("Process Name").size()
+        process_counts = filtered_data.groupby("Process Name").size()
         st.bar_chart(process_counts)
 
         st.subheader("Root Cause Trends")
-        root_cause_counts = sheet_data.groupby("Root Cause").size()
+        root_cause_counts = filtered_data.groupby("Root Cause").size()
         st.bar_chart(root_cause_counts)
+    else:
+        st.warning(f"No downtime data available for {selected_date.strftime('%Y-%m-%d')}.")
