@@ -3,6 +3,7 @@ import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime, date
+import pytz  # Timezone handling
 
 # Define the scope
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -12,6 +13,9 @@ credentials = Credentials.from_service_account_info(st.secrets["google_sheets"],
 
 # Authorize gspread
 client = gspread.authorize(credentials)
+
+# Set timezone to EST (Eastern Standard Time)
+est = pytz.timezone("US/Eastern")
 
 # Append data to Google Sheets
 def append_to_google_sheets(data, sheet_name="Downtime Data"):
@@ -58,13 +62,18 @@ st.title("Downtime Issues")
 st.header("Enter Downtime Issue Manually")
 with st.form("data_entry_form", clear_on_submit=True):
     today_date = st.date_input("Date", value=date.today())
-    defect_time = st.text_input("Time (HH:MM:SS)", value=datetime.now().strftime("%H:%M:%S"))
+
+    # Get current time in EST
+    current_time_est = datetime.now().astimezone(est).strftime("%H:%M:%S")
+    
+    defect_time = st.text_input("Time (HH:MM:SS)", value=current_time_est)
     process_name = st.text_input("Process Name")
     downtime_reason = st.text_input("Downtime Reason")
     action_taken = st.text_input("Action Taken")
     root_cause = st.text_input("Root Cause")
     time_to_resolve = st.number_input("Time to Resolve (Minutes)", min_value=0, step=1)
     resolved = st.selectbox("Resolved?", ["Y", "N"])
+    
     submitted = st.form_submit_button("Add Data")
 
     if submitted:
@@ -85,14 +94,12 @@ with st.form("data_entry_form", clear_on_submit=True):
             st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([new_row])], ignore_index=True)
             st.success("Data added successfully!")
 
+            # **Automatically append data to Google Sheets**
+            append_to_google_sheets(pd.DataFrame([new_row]))
+
 # Display current data
 st.subheader("Current Data")
 st.dataframe(st.session_state.data)
-
-# Save data to Google Sheets button
-if not st.session_state.data.empty:
-    if st.button("Append Data to Google Sheets"):
-        append_to_google_sheets(st.session_state.data)
 
 # Select date for trend analysis
 st.subheader("Review Downtime Trends")
