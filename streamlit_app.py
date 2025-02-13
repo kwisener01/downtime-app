@@ -19,7 +19,7 @@ client = gspread.authorize(credentials)
 est = pytz.timezone("US/Eastern")
 
 # Append data to Google Sheets
-def append_to_google_sheets(data, sheet_name="Project Management"):
+def append_to_google_sheets(data, sheet_name="Downtime Data"):
     try:
         spreadsheet = client.open(sheet_name)
         worksheet = spreadsheet.sheet1  # Use the first sheet
@@ -30,7 +30,7 @@ def append_to_google_sheets(data, sheet_name="Project Management"):
         st.error(f"Spreadsheet '{sheet_name}' not found. Ensure it exists and is shared with the service account.")
 
 # Load data from Google Sheets
-def load_from_google_sheets(sheet_name="Project Management"):
+def load_from_google_sheets(sheet_name="Downtime Data"):
     try:
         spreadsheet = client.open(sheet_name)
         worksheet = spreadsheet.sheet1  # Use the first sheet
@@ -153,6 +153,14 @@ with tab1:
                 append_to_google_sheets(pd.DataFrame([new_row]))
     st.subheader("Current Data")
     st.dataframe(st.session_state.data)
+    
+    st.subheader("Downtime Trends by Date Range")
+    start_date = st.date_input("Start Date", value=date.today())
+    end_date = st.date_input("End Date", value=date.today())
+    sheet_data = load_from_google_sheets()
+    if not sheet_data.empty:
+        filtered_data = sheet_data[(sheet_data["Date"] >= start_date.strftime("%Y-%m-%d")) & (sheet_data["Date"] <= end_date.strftime("%Y-%m-%d"))]
+        st.bar_chart(filtered_data["Downtime Reason"].value_counts())
 
 with tab2:
     st.header("Task Management Dashboard")
