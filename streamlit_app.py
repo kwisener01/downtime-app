@@ -19,7 +19,7 @@ client = gspread.authorize(credentials)
 est = pytz.timezone("US/Eastern")
 
 # Append data to Google Sheets
-def append_to_google_sheets(data, sheet_name="Downtime Data"):
+def append_to_google_sheets(data, sheet_name="Project Management"):
     try:
         spreadsheet = client.open(sheet_name)
         worksheet = spreadsheet.sheet1  # Use the first sheet
@@ -30,7 +30,7 @@ def append_to_google_sheets(data, sheet_name="Downtime Data"):
         st.error(f"Spreadsheet '{sheet_name}' not found. Ensure it exists and is shared with the service account.")
 
 # Load data from Google Sheets
-def load_from_google_sheets(sheet_name="Downtime Data"):
+def load_from_google_sheets(sheet_name="Project Management"):
     try:
         spreadsheet = client.open(sheet_name)
         worksheet = spreadsheet.sheet1  # Use the first sheet
