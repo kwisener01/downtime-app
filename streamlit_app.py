@@ -4,6 +4,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime, date
 import pytz  # Timezone handling
+import json
 
 # Define the scope
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -51,6 +52,41 @@ def validate_time_format(time_str):
     except ValueError:
         return False
 
+# Fetch tasks from Google Sheets
+def get_tasks():
+    client = gspread.authorize(credentials)
+    sheet = client.open("Project Management").worksheet("Tasks")
+    data = sheet.get_all_records()
+    return pd.DataFrame(data)
+
+# Add a new task
+def add_task(task_name, priority, due_date):
+    client = gspread.authorize(credentials)
+    sheet = client.open("Project Management").worksheet("Tasks")
+    tasks_df = get_tasks()
+    new_task_id = len(tasks_df) + 1  # Auto-increment Task ID
+    sheet.append_row([new_task_id, task_name, priority, due_date, "Pending"])
+
+# Update task status
+def update_task_status(task_id, status):
+    client = gspread.authorize(credentials)
+    sheet = client.open("Project Management").worksheet("Tasks")
+    data = sheet.get_all_records()
+    for i, row in enumerate(data, start=2):
+        if row["Task ID"] == task_id:
+            sheet.update_cell(i, 5, status)  # Update Status column
+            break
+
+# Delete a task
+def delete_task(task_id):
+    client = gspread.authorize(credentials)
+    sheet = client.open("Project Management").worksheet("Tasks")
+    data = sheet.get_all_records()
+    for i, row in enumerate(data, start=2):
+        if row["Task ID"] == task_id:
+            sheet.delete_rows(i)
+            break
+
 # Initialize session state
 if "data" not in st.session_state:
     st.session_state.data = pd.DataFrame(columns=["Date", "Time", "Process Name", "Downtime Reason", "Action Taken", "Root Cause", "Time to Resolve (Minutes)", "Resolved (Y/N)"])
@@ -93,37 +129,12 @@ with st.form("data_entry_form", clear_on_submit=True):
             }
             st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([new_row])], ignore_index=True)
             st.success("Data added successfully!")
-
-            # **Automatically append data to Google Sheets**
             append_to_google_sheets(pd.DataFrame([new_row]))
 
 # Display current data
 st.subheader("Current Data")
 st.dataframe(st.session_state.data)
 
-# Select date for trend analysis
-st.subheader("Review Downtime Trends")
-selected_date = st.date_input("Select Date for Analysis", value=date.today())
-
-# Display current data from Google Sheets for the selected date
-sheet_data = load_from_google_sheets()
-if not sheet_data.empty:
-    filtered_data = sheet_data[sheet_data["Date"] == selected_date.strftime("%Y-%m-%d")]
-
-    st.subheader(f"Downtime Data for {selected_date.strftime('%Y-%m-%d')}")
-    st.dataframe(filtered_data)
-
-    if not filtered_data.empty:
-        st.subheader("Defect Type Trends")
-        defect_counts = filtered_data.groupby("Downtime Reason").size()
-        st.bar_chart(defect_counts)
-
-        st.subheader("Process Name Trends")
-        process_counts = filtered_data.groupby("Process Name").size()
-        st.bar_chart(process_counts)
-
-        st.subheader("Root Cause Trends")
-        root_cause_counts = filtered_data.groupby("Root Cause").size()
-        st.bar_chart(root_cause_counts)
-    else:
-        st.warning(f"No downtime data available for {selected_date.strftime('%Y-%m-%d')}.")
+# Task Management Integration
+st.header("Task Management")
+task_dashboard()
