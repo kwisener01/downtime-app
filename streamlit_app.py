@@ -137,4 +137,49 @@ st.dataframe(st.session_state.data)
 
 # Task Management Integration
 st.header("Task Management")
+# Task Management UI
+def task_dashboard():
+    st.title("📌 Task Management Dashboard")
+
+    tasks_df = get_tasks()
+    if tasks_df.empty:
+        st.warning("No tasks found.")
+    else:
+        st.dataframe(tasks_df)
+
+    with st.form("add_task_form"):
+        task_name = st.text_input("Task Name")
+        priority = st.selectbox("Priority", ["Low", "Medium", "High"])
+        due_date = st.date_input("Due Date")
+        add_task_btn = st.form_submit_button("Add Task")
+
+        if add_task_btn:
+            add_task(task_name, priority, str(due_date))
+            st.success("Task added successfully!")
+            st.experimental_rerun()
+
+    st.sidebar.header("Update Tasks")
+    if not tasks_df.empty:
+        task_id = st.sidebar.selectbox("Select Task ID", tasks_df["Task ID"])
+        new_status = st.sidebar.selectbox("Update Status", ["Pending", "In Progress", "Done"])
+        update_task_btn = st.sidebar.button("Update Status")
+
+        if update_task_btn:
+            update_task_status(task_id, new_status)
+            st.success("Task updated successfully!")
+            st.experimental_rerun()
+
+    st.sidebar.header("Delete Tasks")
+    if not tasks_df.empty:
+        delete_task_id = st.sidebar.selectbox("Select Task to Delete", tasks_df["Task ID"])
+        delete_task_btn = st.sidebar.button("Delete Task")
+
+        if delete_task_btn:
+            delete_task(delete_task_id)
+            st.warning("Task deleted!")
+            st.experimental_rerun()
+
+# Task Management Integration
+st.header("Task Management")
 task_dashboard()
+
