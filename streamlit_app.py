@@ -19,22 +19,18 @@ client = gspread.authorize(credentials)
 est = pytz.timezone("US/Eastern")
 
 # Append data to Google Sheets
-def append_to_google_sheets(data, sheet_name="Downtime Data"):
+def append_to_google_sheets(data, sheet_name="Project Management"):
     try:
         spreadsheet = client.open(sheet_name)
         worksheet = spreadsheet.sheet1  # Use the first sheet
-
-        # Convert DataFrame to list of lists
         data_as_list = data.values.tolist()
-
-        # Append the new data
         worksheet.append_rows(data_as_list, table_range="A1")
         st.success("Data appended to Google Sheets!")
     except gspread.exceptions.SpreadsheetNotFound:
         st.error(f"Spreadsheet '{sheet_name}' not found. Ensure it exists and is shared with the service account.")
 
 # Load data from Google Sheets
-def load_from_google_sheets(sheet_name="Downtime Data"):
+def load_from_google_sheets(sheet_name="Project Management"):
     try:
         spreadsheet = client.open(sheet_name)
         worksheet = spreadsheet.sheet1  # Use the first sheet
@@ -87,6 +83,24 @@ def delete_task(task_id):
             sheet.delete_rows(i)
             break
 
+# Task Management UI
+def task_dashboard():
+    st.title("📌 Task Management Dashboard")
+    tasks_df = get_tasks()
+    if tasks_df.empty:
+        st.warning("No tasks found.")
+    else:
+        st.dataframe(tasks_df)
+    with st.form("add_task_form"):
+        task_name = st.text_input("Task Name")
+        priority = st.selectbox("Priority", ["Low", "Medium", "High"])
+        due_date = st.date_input("Due Date")
+        add_task_btn = st.form_submit_button("Add Task")
+        if add_task_btn:
+            add_task(task_name, priority, str(due_date))
+            st.success("Task added successfully!")
+            st.rerun()
+
 # Initialize session state
 if "data" not in st.session_state:
     st.session_state.data = pd.DataFrame(columns=["Date", "Time", "Process Name", "Downtime Reason", "Action Taken", "Root Cause", "Time to Resolve (Minutes)", "Resolved (Y/N)"])
@@ -110,7 +124,6 @@ with tab1:
         time_to_resolve = st.number_input("Time to Resolve (Minutes)", min_value=0, step=1)
         resolved = st.selectbox("Resolved?", ["Y", "N"])
         submitted = st.form_submit_button("Add Data")
-
         if submitted:
             if not validate_time_format(defect_time):
                 st.error("Invalid time format. Please use HH:MM:SS.")
