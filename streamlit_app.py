@@ -156,7 +156,8 @@ def task_dashboard():
         if add_task_btn:
             add_task(task_name, priority, str(due_date))
             st.success("Task added successfully!")
-            st.experimental_rerun()
+            st.rerun()
+()
 
     st.sidebar.header("Update Tasks")
     if not tasks_df.empty:
@@ -167,7 +168,7 @@ def task_dashboard():
         if update_task_btn:
             update_task_status(task_id, new_status)
             st.success("Task updated successfully!")
-            st.experimental_rerun()
+            st.rerun()
 
     st.sidebar.header("Delete Tasks")
     if not tasks_df.empty:
@@ -177,7 +178,7 @@ def task_dashboard():
         if delete_task_btn:
             delete_task(delete_task_id)
             st.warning("Task deleted!")
-            st.experimental_rerun()
+            st.rerun()
 
 # Task Management Integration
 st.header("Task Management")
