@@ -91,6 +91,25 @@ def task_dashboard():
         st.warning("No tasks found.")
     else:
         st.dataframe(tasks_df)
+    st.sidebar.header("Update Tasks")
+    if not tasks_df.empty:
+        task_id = st.sidebar.selectbox("Select Task ID", tasks_df["Task ID"])
+        new_status = st.sidebar.selectbox("Update Status", ["Pending", "In Progress", "Done"])
+        update_task_btn = st.sidebar.button("Update Status")
+        if update_task_btn:
+            update_task_status(task_id, new_status)
+            st.success("Task updated successfully!")
+            st.rerun()
+
+    st.sidebar.header("Delete Tasks")
+    if not tasks_df.empty:
+        delete_task_id = st.sidebar.selectbox("Select Task to Delete", tasks_df["Task ID"])
+        delete_task_btn = st.sidebar.button("Delete Task")
+        if delete_task_btn:
+            delete_task(delete_task_id)
+            st.warning("Task deleted!")
+            st.rerun()
+    
     with st.form("add_task_form"):
         task_name = st.text_input("Task Name")
         priority = st.selectbox("Priority", ["Low", "Medium", "High"])
