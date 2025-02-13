@@ -159,8 +159,8 @@ def task_dashboard():
             st.rerun()
 ()
 
-    st.sidebar.header("Update Tasks")
-    if not tasks_df.empty:
+st.sidebar.header("Update Tasks")
+if not tasks_df.empty:
         task_id = st.sidebar.selectbox("Select Task ID", tasks_df["Task ID"])
         new_status = st.sidebar.selectbox("Update Status", ["Pending", "In Progress", "Done"])
         update_task_btn = st.sidebar.button("Update Status")
@@ -170,8 +170,8 @@ def task_dashboard():
             st.success("Task updated successfully!")
             st.rerun()
 
-    st.sidebar.header("Delete Tasks")
-    if not tasks_df.empty:
+st.sidebar.header("Delete Tasks")
+if not tasks_df.empty:
         delete_task_id = st.sidebar.selectbox("Select Task to Delete", tasks_df["Task ID"])
         delete_task_btn = st.sidebar.button("Delete Task")
 
@@ -183,4 +183,3 @@ def task_dashboard():
 # Task Management Integration
 st.header("Task Management")
 task_dashboard()
-
