@@ -92,94 +92,36 @@ if "data" not in st.session_state:
     st.session_state.data = pd.DataFrame(columns=["Date", "Time", "Process Name", "Downtime Reason", "Action Taken", "Root Cause", "Time to Resolve (Minutes)", "Resolved (Y/N)"])
 
 # App title
-st.title("Downtime Issues")
+st.title("Downtime and Project Management")
 
-# Manual Data Entry Tab
-st.header("Enter Downtime Issue Manually")
-with st.form("data_entry_form", clear_on_submit=True):
-    today_date = st.date_input("Date", value=date.today())
+# Create tabs
+tab1, tab2 = st.tabs(["Downtime Issues", "Project Management"])
 
-    # Get current time in EST
-    current_time_est = datetime.now().astimezone(est).strftime("%H:%M:%S")
-    
-    defect_time = st.text_input("Time (HH:MM:SS)", value=current_time_est)
-    process_name = st.text_input("Process Name")
-    downtime_reason = st.text_input("Downtime Reason")
-    action_taken = st.text_input("Action Taken")
-    root_cause = st.text_input("Root Cause")
-    time_to_resolve = st.number_input("Time to Resolve (Minutes)", min_value=0, step=1)
-    resolved = st.selectbox("Resolved?", ["Y", "N"])
-    
-    submitted = st.form_submit_button("Add Data")
+with tab1:
+    st.header("Enter Downtime Issue Manually")
+    with st.form("data_entry_form", clear_on_submit=True):
+        today_date = st.date_input("Date", value=date.today())
+        current_time_est = datetime.now().astimezone(est).strftime("%H:%M:%S")
+        defect_time = st.text_input("Time (HH:MM:SS)", value=current_time_est)
+        process_name = st.text_input("Process Name")
+        downtime_reason = st.text_input("Downtime Reason")
+        action_taken = st.text_input("Action Taken")
+        root_cause = st.text_input("Root Cause")
+        time_to_resolve = st.number_input("Time to Resolve (Minutes)", min_value=0, step=1)
+        resolved = st.selectbox("Resolved?", ["Y", "N"])
+        submitted = st.form_submit_button("Add Data")
 
-    if submitted:
-        # Validate the time format
-        if not validate_time_format(defect_time):
-            st.error("Invalid time format. Please use HH:MM:SS.")
-        else:
-            new_row = {
-                "Date": today_date.strftime("%Y-%m-%d"),
-                "Time": defect_time,
-                "Process Name": process_name,
-                "Downtime Reason": downtime_reason,
-                "Action Taken": action_taken,
-                "Root Cause": root_cause,
-                "Time to Resolve (Minutes)": time_to_resolve,
-                "Resolved (Y/N)": resolved,
-            }
-            st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([new_row])], ignore_index=True)
-            st.success("Data added successfully!")
-            append_to_google_sheets(pd.DataFrame([new_row]))
+        if submitted:
+            if not validate_time_format(defect_time):
+                st.error("Invalid time format. Please use HH:MM:SS.")
+            else:
+                new_row = {"Date": today_date.strftime("%Y-%m-%d"), "Time": defect_time, "Process Name": process_name, "Downtime Reason": downtime_reason, "Action Taken": action_taken, "Root Cause": root_cause, "Time to Resolve (Minutes)": time_to_resolve, "Resolved (Y/N)": resolved}
+                st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([new_row])], ignore_index=True)
+                st.success("Data added successfully!")
+                append_to_google_sheets(pd.DataFrame([new_row]))
+    st.subheader("Current Data")
+    st.dataframe(st.session_state.data)
 
-# Display current data
-st.subheader("Current Data")
-st.dataframe(st.session_state.data)
-
-# Task Management Integration
-st.header("Task Management")
-# Task Management UI
-def task_dashboard():
-    st.title("📌 Task Management Dashboard")
-
-    tasks_df = get_tasks()
-    if tasks_df.empty:
-        st.warning("No tasks found.")
-    else:
-        st.dataframe(tasks_df)
-
-    with st.form("add_task_form"):
-        task_name = st.text_input("Task Name")
-        priority = st.selectbox("Priority", ["Low", "Medium", "High"])
-        due_date = st.date_input("Due Date")
-        add_task_btn = st.form_submit_button("Add Task")
-
-        if add_task_btn:
-            add_task(task_name, priority, str(due_date))
-            st.success("Task added successfully!")
-            st.rerun()
-()
-
-st.sidebar.header("Update Tasks")
-if not tasks_df.empty:
-        task_id = st.sidebar.selectbox("Select Task ID", tasks_df["Task ID"])
-        new_status = st.sidebar.selectbox("Update Status", ["Pending", "In Progress", "Done"])
-        update_task_btn = st.sidebar.button("Update Status")
-
-        if update_task_btn:
-            update_task_status(task_id, new_status)
-            st.success("Task updated successfully!")
-            st.rerun()
-
-st.sidebar.header("Delete Tasks")
-if not tasks_df.empty:
-        delete_task_id = st.sidebar.selectbox("Select Task to Delete", tasks_df["Task ID"])
-        delete_task_btn = st.sidebar.button("Delete Task")
-
-        if delete_task_btn:
-            delete_task(delete_task_id)
-            st.warning("Task deleted!")
-            st.rerun()
-
-# Task Management Integration
-st.header("Task Management")
-task_dashboard()
+with tab2:
+    st.header("Task Management Dashboard")
+    task_dashboard()
