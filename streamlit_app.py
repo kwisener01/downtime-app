@@ -5,7 +5,6 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime, date
 import pytz  # Timezone handling
 import json
-import os
 
 # Define the scope
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -18,10 +17,6 @@ client = gspread.authorize(credentials)
 
 # Set timezone to EST (Eastern Standard Time)
 est = pytz.timezone("US/Eastern")
-
-# Define image storage directory
-IMAGE_DIR = "downtime_images"
-os.makedirs(IMAGE_DIR, exist_ok=True)
 
 # Append data to Google Sheets
 def append_to_google_sheets(data, sheet_name="Project Management"):
@@ -127,7 +122,7 @@ def task_dashboard():
 
 # Initialize session state
 if "data" not in st.session_state:
-    st.session_state.data = pd.DataFrame(columns=["Date", "Time", "Process Name", "Downtime Reason", "Action Taken", "Root Cause", "Time to Resolve (Minutes)", "Resolved (Y/N)", "Image"])
+    st.session_state.data = pd.DataFrame(columns=["Date", "Time", "Process Name", "Downtime Reason", "Action Taken", "Root Cause", "Time to Resolve (Minutes)", "Resolved (Y/N)"])
 
 # App title
 st.title("Downtime and Project Management")
@@ -147,19 +142,12 @@ with tab1:
         root_cause = st.text_input("Root Cause")
         time_to_resolve = st.number_input("Time to Resolve (Minutes)", min_value=0, step=1)
         resolved = st.selectbox("Resolved?", ["Y", "N"])
-        uploaded_file = st.file_uploader("Upload Image (optional)", type=["jpg", "jpeg", "png"])
         submitted = st.form_submit_button("Add Data")
         if submitted:
-            image_url = ""
-            if uploaded_file:
-                image_path = os.path.join(IMAGE_DIR, uploaded_file.name)
-                with open(image_path, "wb") as f:
-                    f.write(uploaded_file.getbuffer())
-                image_url = image_path
             if not validate_time_format(defect_time):
                 st.error("Invalid time format. Please use HH:MM:SS.")
             else:
-                new_row = {"Date": today_date.strftime("%Y-%m-%d"), "Time": defect_time, "Process Name": process_name, "Downtime Reason": downtime_reason, "Action Taken": action_taken, "Root Cause": root_cause, "Time to Resolve (Minutes)": time_to_resolve, "Resolved (Y/N)": resolved, "Image": image_url}
+                new_row = {"Date": today_date.strftime("%Y-%m-%d"), "Time": defect_time, "Process Name": process_name, "Downtime Reason": downtime_reason, "Action Taken": action_taken, "Root Cause": root_cause, "Time to Resolve (Minutes)": time_to_resolve, "Resolved (Y/N)": resolved}
                 st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([new_row])], ignore_index=True)
                 st.success("Data added successfully!")
                 append_to_google_sheets(pd.DataFrame([new_row]))
