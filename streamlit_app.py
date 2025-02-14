@@ -24,7 +24,7 @@ IMAGE_DIR = "downtime_images"
 os.makedirs(IMAGE_DIR, exist_ok=True)
 
 # Append data to Google Sheets
-def append_to_google_sheets(data, sheet_name="Project Managemen"):
+def append_to_google_sheets(data, sheet_name="Project Management"):
     try:
         spreadsheet = client.open(sheet_name)
         worksheet = spreadsheet.sheet1  # Use the first sheet
@@ -35,7 +35,7 @@ def append_to_google_sheets(data, sheet_name="Project Managemen"):
         st.error(f"Spreadsheet '{sheet_name}' not found. Ensure it exists and is shared with the service account.")
 
 # Load data from Google Sheets
-def load_from_google_sheets(sheet_name="Project Managemen"):
+def load_from_google_sheets(sheet_name="Project Management"):
     try:
         spreadsheet = client.open(sheet_name)
         worksheet = spreadsheet.sheet1  # Use the first sheet
