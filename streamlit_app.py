@@ -72,6 +72,12 @@ with tab1:
     st.subheader("Current Data")
     
     st.subheader("📅 View Downtime Trends")
+    
+    process_names = downtime_data["Process Name"].unique().tolist()
+    selected_process = st.selectbox("Select Process Name", ["All"] + process_names)
+    
+    if selected_process != "All":
+        filtered_data = filtered_data[filtered_data["Process Name"] == selected_process]
     start_date = st.date_input("Start Date", value=date.today())
     end_date = st.date_input("End Date", value=date.today())
     
@@ -82,6 +88,12 @@ with tab1:
         st.dataframe(filtered_data)
         
         st.subheader("📊 Downtime Trends")
+        
+        if not filtered_data.empty:
+            downtime_counts = filtered_data["Downtime Reason"].value_counts()
+            st.bar_chart(downtime_counts)
+        else:
+            st.warning("No data available for the selected criteria.")
         downtime_counts = filtered_data["Downtime Reason"].value_counts()
         st.bar_chart(downtime_counts)
     else:
