@@ -74,14 +74,15 @@ with tab1:
     st.subheader("📅 View Downtime Trends")
     
     
+    downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
     if not downtime_data.empty:
         downtime_data["Date"] = pd.to_datetime(downtime_data["Date"])
         process_names = downtime_data["Process Name"].unique().tolist()
     else:
         process_names = []
-    selected_process = st.selectbox("Select Process Name", ["All"] + process_names)
+    selected_process = st.selectbox("Select Process Name", ["All"] + process_names) if process_names else "All"
     
-    if selected_process != "All":
+    if selected_process != "All" and not filtered_data.empty:
         filtered_data = filtered_data[filtered_data["Process Name"] == selected_process]
     start_date = st.date_input("Start Date", value=date.today())
     end_date = st.date_input("End Date", value=date.today())
