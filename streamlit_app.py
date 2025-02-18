@@ -4,7 +4,6 @@ import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime, date
 import pytz  # Timezone handling
-import speech_recognition as sr  # Voice input
 import json
 
 # Define the scope
@@ -158,112 +157,10 @@ with tab2:
 with tab3:
     st.header("🎯 Personal Productivity Tracker")
     
-    st.subheader("📋 Open and Closed Goals")
+    st.subheader("📋 Goals")
     productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
     if not productivity_data.empty:
-        status_filter = st.radio("Show:", ["Open Goals", "Closed Goals", "All"], index=0)
-        if status_filter == "Open Goals":
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = pd.DataFrame()
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = pd.DataFrame()
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = pd.DataFrame()
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = pd.DataFrame()
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = pd.DataFrame()
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = pd.DataFrame()
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = productivity_data
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = productivity_data
-        if "Status" in productivity_data.columns:
-            if "Status" in productivity_data.columns:
-                        filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = productivity_data
-            elif status_filter == "Closed Goals":
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = pd.DataFrame()
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = pd.DataFrame()
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = pd.DataFrame()
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = pd.DataFrame()
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = pd.DataFrame()
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = pd.DataFrame()
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = productivity_data
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = productivity_data
-        if "Status" in productivity_data.columns:
-            if "Status" in productivity_data.columns:
-                        filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = productivity_data
-        else:
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = pd.DataFrame()
-        
-        st.dataframe(filtered_goals)
+        st.dataframe(productivity_data)
     else:
         st.warning("No goals found.")
     with st.form("goal_setting_form", clear_on_submit=True):
@@ -277,22 +174,6 @@ with tab3:
             append_to_google_sheets(new_goal, "Project Management", "Personal Productivity")
             st.success("Goal added successfully!")
     
-    # Voice Note Entry
-    recognizer = sr.Recognizer()
-    with st.expander("🎙️ Voice Note Entry"):
-        if st.button("Record Voice Note"):
-            with sr.Microphone() as source:
-                st.info("Listening...")
-                try:
-                    audio = recognizer.listen(source, timeout=5)
-                    text = recognizer.recognize_google(audio)
-                    st.write("Transcribed Text:", text)
-                    new_note = pd.DataFrame([[text]], columns=["Voice Note"])
-                    new_note = new_note.astype(str)
-                    append_to_google_sheets(new_note, "Project Management", "Personal Productivity")
-                except sr.UnknownValueError:
-                    st.error("Could not understand audio.")
-                except sr.RequestError:
-                    st.error("Speech Recognition service unavailable.")
+    
 
 st.success("App updated with Personal Productivity linked to Google Sheets!")
