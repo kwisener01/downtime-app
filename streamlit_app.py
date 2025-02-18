@@ -92,7 +92,7 @@ with tab3:
         add_goal_btn = st.form_submit_button("Add Goal")
         if add_goal_btn:
             new_goal = pd.DataFrame([[goal_name, goal_priority, goal_due_date]], columns=["Goal Name", "Priority", "Due Date"])
-            append_to_google_sheets(new_goal, "Personal Productivity")
+            append_to_google_sheets(new_goal, "Project Management", "Personal Productivity")
             st.success("Goal added successfully!")
     
     # Voice Note Entry
