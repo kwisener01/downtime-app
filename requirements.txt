@@ -7,5 +7,4 @@ google-auth-httplib2
 google-auth-requests
 opencv-python
 numpy
-pyzbar
-pytz
+
