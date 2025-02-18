@@ -132,14 +132,16 @@ with tab3:
     if not productivity_data.empty:
         status_filter = st.radio("Show:", ["Open Goals", "Closed Goals", "All"], index=0)
         if status_filter == "Open Goals":
+        if "Status" in productivity_data.columns:
             if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
+                        filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
         else:
             st.warning("No 'Status' column found in the data.")
             filtered_goals = productivity_data
-        elif status_filter == "Closed Goals":
+            elif status_filter == "Closed Goals":
+        if "Status" in productivity_data.columns:
             if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
+                        filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
         else:
             st.warning("No 'Status' column found in the data.")
             filtered_goals = productivity_data
