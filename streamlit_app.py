@@ -90,6 +90,11 @@ with tab1:
         downtime_data["Date"] = pd.to_datetime(downtime_data["Date"])
         process_names = downtime_data["Process Name"].unique().tolist()
     else:
+        if "Status" in productivity_data.columns:
+            filtered_goals = productivity_data
+        else:
+            st.warning("No 'Status' column found in the data.")
+            filtered_goals = pd.DataFrame()
         process_names = []
     selected_process = st.selectbox("Select Process Name", ["All"] + process_names) if process_names else "All"
     
@@ -157,6 +162,11 @@ with tab3:
             filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
         else:
             st.warning("No 'Status' column found in the data.")
+            filtered_goals = pd.DataFrame()
+        if "Status" in productivity_data.columns:
+            filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
+        else:
+            st.warning("No 'Status' column found in the data.")
             filtered_goals = productivity_data
         if "Status" in productivity_data.columns:
             filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
@@ -170,6 +180,11 @@ with tab3:
             st.warning("No 'Status' column found in the data.")
             filtered_goals = productivity_data
             elif status_filter == "Closed Goals":
+        if "Status" in productivity_data.columns:
+            filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
+        else:
+            st.warning("No 'Status' column found in the data.")
+            filtered_goals = pd.DataFrame()
         if "Status" in productivity_data.columns:
             filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
         else:
