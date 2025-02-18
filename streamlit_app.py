@@ -149,12 +149,22 @@ with tab3:
             st.warning("No 'Status' column found in the data.")
             filtered_goals = productivity_data
         if "Status" in productivity_data.columns:
+            filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
+        else:
+            st.warning("No 'Status' column found in the data.")
+            filtered_goals = productivity_data
+        if "Status" in productivity_data.columns:
             if "Status" in productivity_data.columns:
                         filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
         else:
             st.warning("No 'Status' column found in the data.")
             filtered_goals = productivity_data
             elif status_filter == "Closed Goals":
+        if "Status" in productivity_data.columns:
+            filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
+        else:
+            st.warning("No 'Status' column found in the data.")
+            filtered_goals = productivity_data
         if "Status" in productivity_data.columns:
             filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
         else:
