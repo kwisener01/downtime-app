@@ -20,10 +20,10 @@ client = gspread.authorize(credentials)
 est = pytz.timezone("US/Eastern")
 
 # Append data to Google Sheets
-def append_to_google_sheets(data, sheet_name="Project Management"):
+def append_to_google_sheets(data, sheet_name="Project Management", worksheet_name="Personal Productivity"):
     try:
         spreadsheet = client.open(sheet_name)
-        worksheet = spreadsheet.worksheet("Main")  # Use the single worksheet
+        worksheet = spreadsheet.worksheet(worksheet_name)  # Use the specific worksheet
         data_as_list = data.values.tolist()
         worksheet.append_rows(data_as_list, table_range="A1")
         st.success("Data appended to Google Sheets!")
@@ -31,10 +31,10 @@ def append_to_google_sheets(data, sheet_name="Project Management"):
         st.error(f"Spreadsheet '{sheet_name}' not found. Ensure it exists and is shared with the service account.")
 
 # Load data from Google Sheets
-def load_from_google_sheets(sheet_name="Project Management", worksheet_name="Main"):
+def load_from_google_sheets(sheet_name="Project Management", worksheet_name="Personal Productivity"):
     try:
         spreadsheet = client.open(sheet_name)
-        worksheet = spreadsheet.worksheet(worksheet_name)  # Use the single worksheet
+        worksheet = spreadsheet.worksheet(worksheet_name)  # Use the specific worksheet
         data = pd.DataFrame(worksheet.get_all_records())
         return data
     except gspread.exceptions.SpreadsheetNotFound:
@@ -68,7 +68,7 @@ with tab1:
         if submitted:
             new_row = {"Date": today_date.strftime("%Y-%m-%d"), "Time": defect_time, "Process Name": process_name, "Downtime Reason": downtime_reason, "Action Taken": action_taken, "Root Cause": root_cause, "Time to Resolve (Minutes)": time_to_resolve, "Resolved (Y/N)": resolved}
             st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([new_row])], ignore_index=True)
-            append_to_google_sheets(pd.DataFrame([new_row]))
+            append_to_google_sheets(pd.DataFrame([new_row]), "Main")
     st.subheader("Current Data")
     st.dataframe(st.session_state.data)
 
@@ -91,6 +91,8 @@ with tab3:
         goal_due_date = st.date_input("Due Date")
         add_goal_btn = st.form_submit_button("Add Goal")
         if add_goal_btn:
+            new_goal = pd.DataFrame([[goal_name, goal_priority, goal_due_date]], columns=["Goal Name", "Priority", "Due Date"])
+            append_to_google_sheets(new_goal, "Personal Productivity")
             st.success("Goal added successfully!")
     
     # Voice Note Entry
@@ -103,9 +105,11 @@ with tab3:
                     audio = recognizer.listen(source, timeout=5)
                     text = recognizer.recognize_google(audio)
                     st.write("Transcribed Text:", text)
+                    new_note = pd.DataFrame([[text]], columns=["Voice Note"])
+                    append_to_google_sheets(new_note, "Personal Productivity")
                 except sr.UnknownValueError:
                     st.error("Could not understand audio.")
                 except sr.RequestError:
                     st.error("Speech Recognition service unavailable.")
 
-st.success("App updated with consolidated worksheet and new features!")
+st.success("App updated with Personal Productivity linked to Google Sheets!")
