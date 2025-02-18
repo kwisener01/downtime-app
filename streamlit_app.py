@@ -126,6 +126,21 @@ with tab2:
 ### Personal Productivity ###
 with tab3:
     st.header("🎯 Personal Productivity Tracker")
+    
+    st.subheader("📋 Open and Closed Goals")
+    productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
+    if not productivity_data.empty:
+        status_filter = st.radio("Show:", ["Open Goals", "Closed Goals", "All"], index=0)
+        if status_filter == "Open Goals":
+            filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
+        elif status_filter == "Closed Goals":
+            filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
+        else:
+            filtered_goals = productivity_data
+        
+        st.dataframe(filtered_goals)
+    else:
+        st.warning("No goals found.")
     with st.form("goal_setting_form", clear_on_submit=True):
         goal_name = st.text_input("Goal Name")
         goal_priority = st.selectbox("Priority", ["Low", "Medium", "High"])
