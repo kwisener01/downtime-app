@@ -181,30 +181,6 @@ with tab3:
     
     
 
-### 2D Matrix Scanner ###
-with tab4:
-    st.header("📸 2D Matrix Code Scanner")
-    
-    # Start scanning button
-    start_scan = st.button("Start Scanning")
-    stop_scan = st.button("Stop Scanning")
-    
-    if start_scan:
-        st.write("**Scanning... Point the camera at a 2D Matrix Code**")
-        cap = cv2.VideoCapture(0)  # Open camera
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if not ret:
-                st.warning("Failed to capture image from camera.")
-                break
-            decoded_objects = decode(frame)
-            for obj in decoded_objects:
-                scanned_data = obj.data.decode('utf-8')
-                st.write(f"**Decoded Data:** {scanned_data}")
-                cap.release()  # Stop scanning after successful detection
-                break
-        cap.release()
-        cv2.destroyAllWindows()
     
     if stop_scan:
         st.warning("Scanning Stopped. Click 'Start Scanning' to scan again.")
