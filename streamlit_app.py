@@ -68,7 +68,7 @@ with tab1:
         if submitted:
             new_row = {"Date": today_date.strftime("%Y-%m-%d"), "Time": defect_time, "Process Name": process_name, "Downtime Reason": downtime_reason, "Action Taken": action_taken, "Root Cause": root_cause, "Time to Resolve (Minutes)": time_to_resolve, "Resolved (Y/N)": resolved}
             st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([new_row])], ignore_index=True)
-            append_to_google_sheets(pd.DataFrame([new_row]), "Main")
+            append_to_google_sheets(pd.DataFrame([new_row]), "Project Management", "Downtime Issues")
     st.subheader("Current Data")
     st.dataframe(st.session_state.data)
 
@@ -92,6 +92,7 @@ with tab3:
         add_goal_btn = st.form_submit_button("Add Goal")
         if add_goal_btn:
             new_goal = pd.DataFrame([[goal_name, goal_priority, goal_due_date]], columns=["Goal Name", "Priority", "Due Date"])
+            new_goal = new_goal.astype(str)
             append_to_google_sheets(new_goal, "Project Management", "Personal Productivity")
             st.success("Goal added successfully!")
     
@@ -106,7 +107,8 @@ with tab3:
                     text = recognizer.recognize_google(audio)
                     st.write("Transcribed Text:", text)
                     new_note = pd.DataFrame([[text]], columns=["Voice Note"])
-                    append_to_google_sheets(new_note, "Personal Productivity")
+                    new_note = new_note.astype(str)
+                    append_to_google_sheets(new_note, "Project Management", "Personal Productivity")
                 except sr.UnknownValueError:
                     st.error("Could not understand audio.")
                 except sr.RequestError:
