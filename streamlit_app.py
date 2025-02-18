@@ -180,5 +180,5 @@ with tab3:
 
 
     
-    if stop_scan:
-        st.warning("Scanning Stopped. Click 'Start Scanning' to scan again.")
+  #  if stop_scan:
+ #       st.warning("Scanning Stopped. Click 'Start Scanning' to scan again.")
