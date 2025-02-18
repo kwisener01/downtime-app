@@ -152,6 +152,11 @@ with tab3:
             filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
         else:
             st.warning("No 'Status' column found in the data.")
+            filtered_goals = pd.DataFrame()
+        if "Status" in productivity_data.columns:
+            filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
+        else:
+            st.warning("No 'Status' column found in the data.")
             filtered_goals = productivity_data
         if "Status" in productivity_data.columns:
             filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
@@ -174,6 +179,11 @@ with tab3:
             filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
         else:
             st.warning("No 'Status' column found in the data.")
+            filtered_goals = pd.DataFrame()
+        if "Status" in productivity_data.columns:
+            filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
+        else:
+            st.warning("No 'Status' column found in the data.")
             filtered_goals = productivity_data
         if "Status" in productivity_data.columns:
             filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
@@ -187,7 +197,11 @@ with tab3:
             st.warning("No 'Status' column found in the data.")
             filtered_goals = productivity_data
         else:
-        filtered_goals = productivity_data
+        if "Status" in productivity_data.columns:
+            filtered_goals = productivity_data
+        else:
+            st.warning("No 'Status' column found in the data.")
+            filtered_goals = pd.DataFrame()
         
         st.dataframe(filtered_goals)
     else:
