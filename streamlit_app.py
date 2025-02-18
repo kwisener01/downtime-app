@@ -34,6 +34,17 @@ def append_to_google_sheets(data, sheet_name="Project Management", worksheet_nam
 def load_from_google_sheets(sheet_name="Project Management", worksheet_name="Personal Productivity"):
     try:
         spreadsheet = client.open(sheet_name)
+        worksheet = spreadsheet.worksheet(worksheet_name)
+        data = pd.DataFrame(worksheet.get_all_records())
+        return data
+    except gspread.exceptions.SpreadsheetNotFound:
+        st.error(f"Spreadsheet '{sheet_name}' not found. Ensure it exists and is shared with the service account.")
+        return pd.DataFrame()
+    except gspread.exceptions.APIError as e:
+        st.error(f"Google Sheets API error: {str(e)}. Please check access permissions and API quota.")
+        return pd.DataFrame()
+    try:
+        spreadsheet = client.open(sheet_name)
         worksheet = spreadsheet.worksheet(worksheet_name)  # Use the specific worksheet
         data = pd.DataFrame(worksheet.get_all_records())
         return data
@@ -133,12 +144,22 @@ with tab3:
         status_filter = st.radio("Show:", ["Open Goals", "Closed Goals", "All"], index=0)
         if status_filter == "Open Goals":
         if "Status" in productivity_data.columns:
+            filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
+        else:
+            st.warning("No 'Status' column found in the data.")
+            filtered_goals = productivity_data
+        if "Status" in productivity_data.columns:
             if "Status" in productivity_data.columns:
                         filtered_goals = productivity_data[productivity_data["Status"] != "Closed"]
         else:
             st.warning("No 'Status' column found in the data.")
             filtered_goals = productivity_data
             elif status_filter == "Closed Goals":
+        if "Status" in productivity_data.columns:
+            filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
+        else:
+            st.warning("No 'Status' column found in the data.")
+            filtered_goals = productivity_data
         if "Status" in productivity_data.columns:
             if "Status" in productivity_data.columns:
                         filtered_goals = productivity_data[productivity_data["Status"] == "Closed"]
