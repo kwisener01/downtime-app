@@ -82,7 +82,8 @@ with tab1:
         process_names = []
     selected_process = st.selectbox("Select Process Name", ["All"] + process_names) if process_names else "All"
     
-    if selected_process != "All" and not filtered_data.empty:
+    if selected_process != "All":
+        filtered_data = filtered_data[filtered_data["Process Name"] == selected_process] if not filtered_data.empty else pd.DataFrame()
         filtered_data = filtered_data[filtered_data["Process Name"] == selected_process]
     start_date = st.date_input("Start Date", value=date.today())
     end_date = st.date_input("End Date", value=date.today())
