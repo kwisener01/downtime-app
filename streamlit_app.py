@@ -70,6 +70,22 @@ with tab1:
             st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([new_row])], ignore_index=True)
             append_to_google_sheets(pd.DataFrame([new_row]), "Project Management", "Downtime Issues")
     st.subheader("Current Data")
+    
+    st.subheader("📅 View Downtime Trends")
+    start_date = st.date_input("Start Date", value=date.today())
+    end_date = st.date_input("End Date", value=date.today())
+    
+    downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
+    if not downtime_data.empty:
+        downtime_data["Date"] = pd.to_datetime(downtime_data["Date"])
+        filtered_data = downtime_data[(downtime_data["Date"] >= pd.to_datetime(start_date)) & (downtime_data["Date"] <= pd.to_datetime(end_date))]
+        st.dataframe(filtered_data)
+        
+        st.subheader("📊 Downtime Trends")
+        downtime_counts = filtered_data["Downtime Reason"].value_counts()
+        st.bar_chart(downtime_counts)
+    else:
+        st.warning("No downtime data found.")
     st.dataframe(st.session_state.data)
 
 ### KPI Dashboard ###
