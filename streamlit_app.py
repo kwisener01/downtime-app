@@ -59,9 +59,8 @@ if "data" not in st.session_state:
 st.title("Operations Management Assistant")
 
 # Import necessary libraries for 2D Matrix Scanning
-import cv2
 import numpy as np
-from pyzbar.pyzbar import decode
+#from pyzbar.pyzbar import decode
 
 # Create tabs
 tab1, tab2, tab3 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Productivity"])
