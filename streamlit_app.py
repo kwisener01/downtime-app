@@ -64,7 +64,7 @@ import numpy as np
 from pyzbar.pyzbar import decode
 
 # Create tabs
-tab1, tab2, tab3, tab4 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Productivity", "2D Matrix Scanner"])
+tab1, tab2, tab3 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Productivity"])
 
 ### Downtime Tracking ###
 with tab1:
@@ -180,6 +180,7 @@ with tab3:
             st.success("Goal added successfully!")
     
     
+
 
     
     if stop_scan:
