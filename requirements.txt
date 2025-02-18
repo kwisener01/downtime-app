@@ -1,7 +1,5 @@
 streamlit
 pandas
 gspread
-google-auth
-google-auth-oauthlib
-google-auth-httplib2
-pytz
+oauth2client
+SpeechRecognition
