@@ -82,8 +82,8 @@ with tab1:
         process_names = []
     selected_process = st.selectbox("Select Process Name", ["All"] + process_names) if process_names else "All"
     
-    if selected_process != "All":
-        filtered_data = filtered_data[filtered_data["Process Name"] == selected_process] if not filtered_data.empty else pd.DataFrame()
+    if selected_process != "All" and 'filtered_data' in locals():
+        filtered_data = downtime_data[downtime_data["Process Name"] == selected_process] if not filtered_data.empty else pd.DataFrame()
         filtered_data = filtered_data[filtered_data["Process Name"] == selected_process]
     start_date = st.date_input("Start Date", value=date.today())
     end_date = st.date_input("End Date", value=date.today())
@@ -95,6 +95,12 @@ with tab1:
         st.dataframe(filtered_data)
         
         st.subheader("📊 Downtime Trends")
+        
+        st.subheader("📈 Downtime Statistics")
+        if not filtered_data.empty:
+            st.write(f"Total Downtime Entries: {filtered_data.shape[0]}")
+            st.write(f"Average Resolution Time: {filtered_data['Time to Resolve (Minutes)'].mean():.2f} minutes")
+            st.write(f"Most Common Downtime Reason: {filtered_data['Downtime Reason'].mode()[0]}")
         
         if not filtered_data.empty:
             downtime_counts = filtered_data["Downtime Reason"].value_counts()
