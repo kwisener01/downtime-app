@@ -73,7 +73,12 @@ with tab1:
     
     st.subheader("📅 View Downtime Trends")
     
-    process_names = downtime_data["Process Name"].unique().tolist()
+    
+    if not downtime_data.empty:
+        downtime_data["Date"] = pd.to_datetime(downtime_data["Date"])
+        process_names = downtime_data["Process Name"].unique().tolist()
+    else:
+        process_names = []
     selected_process = st.selectbox("Select Process Name", ["All"] + process_names)
     
     if selected_process != "All":
