@@ -4,7 +4,6 @@ import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime, date
 import pytz  # Timezone handling
-import json
 
 # Define the scope
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -42,14 +41,6 @@ def load_from_google_sheets(sheet_name="Project Management", worksheet_name="Per
     except gspread.exceptions.APIError as e:
         st.error(f"Google Sheets API error: {str(e)}. Please check access permissions and API quota.")
         return pd.DataFrame()
-    try:
-        spreadsheet = client.open(sheet_name)
-        worksheet = spreadsheet.worksheet(worksheet_name)  # Use the specific worksheet
-        data = pd.DataFrame(worksheet.get_all_records())
-        return data
-    except gspread.exceptions.SpreadsheetNotFound:
-        st.error(f"Spreadsheet '{sheet_name}' not found. Ensure it exists and is shared with the service account.")
-        return pd.DataFrame()
 
 # Initialize session state
 if "data" not in st.session_state:
@@ -57,8 +48,6 @@ if "data" not in st.session_state:
 
 # App title
 st.title("Operations Management Assistant")
-
-# Import necessary libraries for 2D Matrix Scanning
 
 # Create tabs
 tab1, tab2, tab3 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Productivity"])
@@ -82,67 +71,6 @@ with tab1:
             st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([new_row])], ignore_index=True)
             append_to_google_sheets(pd.DataFrame([new_row]), "Project Management", "Downtime Issues")
     st.subheader("Current Data")
-    
-    st.subheader("📅 View Downtime Trends")
-    
-    
-    downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
-    if not downtime_data.empty:
-        downtime_data["Date"] = pd.to_datetime(downtime_data["Date"])
-        process_names = downtime_data["Process Name"].unique().tolist()
-    else:
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = pd.DataFrame()
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = pd.DataFrame()
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = pd.DataFrame()
-        if "Status" in productivity_data.columns:
-            filtered_goals = productivity_data
-        else:
-            st.warning("No 'Status' column found in the data.")
-            filtered_goals = pd.DataFrame()
-        process_names = []
-    selected_process = st.selectbox("Select Process Name", ["All"] + process_names) if process_names else "All"
-    
-    if selected_process != "All" and 'filtered_data' in locals():
-        filtered_data = downtime_data[downtime_data["Process Name"] == selected_process] if not filtered_data.empty else pd.DataFrame()
-        filtered_data = filtered_data[filtered_data["Process Name"] == selected_process]
-    start_date = st.date_input("Start Date", value=date.today())
-    end_date = st.date_input("End Date", value=date.today())
-    
-    downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
-    if not downtime_data.empty:
-        downtime_data["Date"] = pd.to_datetime(downtime_data["Date"])
-        filtered_data = downtime_data[(downtime_data["Date"] >= pd.to_datetime(start_date)) & (downtime_data["Date"] <= pd.to_datetime(end_date))]
-        st.dataframe(filtered_data)
-        
-        st.subheader("📊 Downtime Trends")
-        
-        st.subheader("📈 Downtime Statistics")
-        if not filtered_data.empty:
-            st.write(f"Total Downtime Entries: {filtered_data.shape[0]}")
-            st.write(f"Average Resolution Time: {filtered_data['Time to Resolve (Minutes)'].mean():.2f} minutes")
-            st.write(f"Most Common Downtime Reason: {filtered_data['Downtime Reason'].mode()[0]}")
-        
-        if not filtered_data.empty:
-            downtime_counts = filtered_data["Downtime Reason"].value_counts()
-            st.bar_chart(downtime_counts)
-        else:
-            st.warning("No data available for the selected criteria.")
-        downtime_counts = filtered_data["Downtime Reason"].value_counts()
-        st.bar_chart(downtime_counts)
-    else:
-        st.warning("No downtime data found.")
     st.dataframe(st.session_state.data)
 
 ### KPI Dashboard ###
@@ -159,10 +87,6 @@ with tab2:
 with tab3:
     st.header("🎯 Personal Productivity Tracker")
     
-    st.subheader("📋 Goals")
-    
-    
-
     productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
     if not productivity_data.empty:
         st.subheader("📝 Update Goal Status")
@@ -171,7 +95,6 @@ with tab3:
             selected_goal = st.selectbox("Select Goal to Update", goal_options)
             new_status = st.selectbox("Update Status", ["Open", "In Progress", "Completed"])
             update_status_btn = st.button("Update Status")
-            
             if update_status_btn:
                 spreadsheet = client.open("Project Management")
                 worksheet = spreadsheet.worksheet("Personal Productivity")
@@ -182,62 +105,10 @@ with tab3:
                         worksheet.update_cell(i, status_col_index, new_status)
                         st.success(f"Status updated for '{selected_goal}' to '{new_status}'!")
                         break
-    st.subheader("📝 Update Goal Status")
-    goal_options = productivity_data["Goal Name"].dropna().tolist()
-    if goal_options:
-        selected_goal = st.selectbox("Select Goal to Update", goal_options)
-    else:
-        st.warning("No goals available to update.")
-        selected_goal = None
-        else:
-            st.warning("No goals available to update.")
-            selected_goal = None
-        new_status = st.selectbox("Update Status", ["Open", "In Progress", "Completed"])
-        update_status_btn = st.button("Update Status")
-        
-        if update_status_btn and selected_goal:
-    spreadsheet = client.open("Project Management")
-    worksheet = spreadsheet.worksheet("Personal Productivity")
-    data = worksheet.get_all_records()
-    for i, row in enumerate(data, start=2):  # Google Sheets index starts at 2 because headers are in row 1
-        if row["Goal Name"] == selected_goal:
-            status_col_index = worksheet.find("Status").col  # Locate the "Status" column
-            worksheet.update_cell(i, status_col_index, new_status)
-            st.success(f"Status updated for '{selected_goal}' to '{new_status}'!")
-            break
-            spreadsheet = client.open("Project Management")
-            worksheet = spreadsheet.worksheet("Personal Productivity")
-            data = worksheet.get_all_records()
-            for i, row in enumerate(data, start=2):  # Google Sheets index starts at 2 because headers are in row 1
-                if row["Goal Name"] == selected_goal:
-                    col_index = worksheet.find("Status").col  # Locate the "Status" column
-                    worksheet.update_cell(i, col_index, new_status)
-                    st.success(f"Status updated for '{selected_goal}' to '{new_status}'!")
-                    break
     
-    # Allow updating goal status
-    productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
-    if not productivity_data.empty:
-        st.subheader("📝 Update Goal Status")
-        goal_options = productivity_data["Goal Name"].dropna().tolist()
-        selected_goal = st.selectbox("Select Goal to Update", goal_options)
-        new_status = st.selectbox("Update Status", ["Open", "In Progress", "Completed"])
-        update_status_btn = st.button("Update Status")
-        
-        if update_status_btn:
-            spreadsheet = client.open("Project Management")
-            worksheet = spreadsheet.worksheet("Personal Productivity")
-            data = worksheet.get_all_records()
-            for i, row in enumerate(data, start=2):  # Google Sheets index starts at 1, headers on row 1
-                if row["Goal Name"] == selected_goal:
-                    status_col_index = worksheet.find("Status").col  # Dynamically find the Status column
-                    worksheet.update_cell(i, status_col_index, new_status)  # Assuming Status is in column 4
-                    st.success(f"Status updated for '{selected_goal}' to '{new_status}'!")
-                    break
-    productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
+    st.subheader("📋 Goals")
     st.dataframe(productivity_data)
-    else:
-        st.warning("No goals found.")
+
     with st.form("goal_setting_form", clear_on_submit=True):
         goal_name = st.text_input("Goal Name")
         goal_priority = st.selectbox("Priority", ["Low", "Medium", "High"])
@@ -248,9 +119,3 @@ with tab3:
             new_goal = new_goal.astype(str)
             append_to_google_sheets(new_goal, "Project Management", "Personal Productivity")
             st.success("Goal added successfully!")
-    
-    
-
-
-    
-    
