@@ -58,7 +58,7 @@ if "data" not in st.session_state:
 # App title
 st.title("Operations Management Assistant")
 
-
+# Import necessary libraries for 2D Matrix Scanning
 
 # Create tabs
 tab1, tab2, tab3 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Productivity"])
@@ -160,6 +160,24 @@ with tab3:
     st.header("🎯 Personal Productivity Tracker")
     
     st.subheader("📋 Goals")
+    
+    # Allow updating goal status
+    if not productivity_data.empty:
+        st.subheader("📝 Update Goal Status")
+        goal_options = productivity_data["Goal Name"].tolist()
+        selected_goal = st.selectbox("Select Goal to Update", goal_options)
+        new_status = st.selectbox("Update Status", ["Open", "In Progress", "Completed"])
+        update_status_btn = st.button("Update Status")
+        
+        if update_status_btn:
+            spreadsheet = client.open("Project Management")
+            worksheet = spreadsheet.worksheet("Personal Productivity")
+            data = worksheet.get_all_records()
+            for i, row in enumerate(data, start=2):  # Google Sheets index starts at 1, headers on row 1
+                if row["Goal Name"] == selected_goal:
+                    worksheet.update_cell(i, 4, new_status)  # Assuming Status is in column 4
+                    st.success(f"Status updated for '{selected_goal}' to '{new_status}'!")
+                    break
     productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
     if not productivity_data.empty:
         st.dataframe(productivity_data)
@@ -180,5 +198,4 @@ with tab3:
 
 
     
-  #  if stop_scan:
- #       st.warning("Scanning Stopped. Click 'Start Scanning' to scan again.")
+    
