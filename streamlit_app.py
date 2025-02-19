@@ -44,7 +44,7 @@ def load_from_google_sheets(sheet_name="Project Management", worksheet_name="Per
 
 # Initialize session state
 if "data" not in st.session_state:
-    st.session_state.data = pd.DataFrame(columns=["Date", "Time", "Process Name", "Downtime Reason", "Action Taken", "Root Cause", "Time to Resolve (Minutes)", "Resolved (Y/N)"])
+    st.session_state.data = pd.DataFrame(columns=["Date", "Time", "Process Name", "Downtime Reason", "Action Taken", "Root Cause", "Time to Resolve (Minutes)", "Resolved (Y/N)", "Status"])
 
 # App title
 st.title("Operations Management Assistant")
