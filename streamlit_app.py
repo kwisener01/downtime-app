@@ -168,7 +168,41 @@ with tab4:
                         st.success(f"Status updated for '{selected_task}' to '{new_status}'!")
                         break
     
-    st.subheader("📋 Tasks")
+    st.subheader("📋 Task List for Selected Timeframe")
+    start_date = st.date_input("Start Date", value=date.today())
+    end_date = st.date_input("End Date", value=date.today())
+    
+    if not task_data.empty:
+        task_data["Due Date"] = pd.to_datetime(task_data["Due Date"])
+        filtered_tasks = task_data[(task_data["Due Date"] >= pd.to_datetime(start_date)) & (task_data["Due Date"] <= pd.to_datetime(end_date))]
+        st.dataframe(filtered_tasks)
+    else:
+        st.warning("No task data available.")
+    
+    st.subheader("📝 Update Task Status by Key")
+    if "Key" in task_data.columns:
+        task_keys = task_data["Key"].dropna().tolist()
+    else:
+        st.warning("No 'Key' column found in the data.")
+        task_keys = []
+    
+    if task_keys:
+        selected_task_key = st.selectbox("Select Task to Update (by Key)", task_keys)
+        new_status = st.selectbox("Update Status", ["Not Started", "In Progress", "Completed"])
+        update_task_by_key_btn = st.button("Update Task Status by Key")
+        
+        if update_task_by_key_btn:
+            spreadsheet = client.open("Project Management")
+            worksheet = spreadsheet.worksheet("Task Delegation")
+            data = worksheet.get_all_records()
+            for i, row in enumerate(data, start=2):
+                if row["Key"] == selected_task_key:
+                    status_col_index = worksheet.find("Status").col
+                    worksheet.update_cell(i, status_col_index, new_status)
+                    st.success(f"Status updated for Task Key '{selected_task_key}' to '{new_status}'!")
+                    break
+    
+st.subheader("📋 Tasks")
     st.dataframe(task_data)
     
     with st.form("task_assignment_form", clear_on_submit=True):
