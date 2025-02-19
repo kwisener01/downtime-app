@@ -162,7 +162,7 @@ with tab3:
     st.subheader("📋 Goals")
     
 
-        if not productivity_data.empty:
+    if not productivity_data.empty:
         st.subheader("📝 Update Goal Status")
         goal_options = productivity_data["Goal Name"].dropna().tolist()
         if goal_options:
