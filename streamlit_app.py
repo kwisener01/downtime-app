@@ -52,6 +52,8 @@ st.title("Operations Management Assistant")
 # Create tabs
 tab1, tab2, tab3 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Productivity"])
 
+downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
+
 ### Downtime Tracking ###
 with tab1:
     st.header("Enter Downtime Issue")
@@ -70,7 +72,44 @@ with tab1:
             new_row = {"Date": today_date.strftime("%Y-%m-%d"), "Time": defect_time, "Process Name": process_name, "Downtime Reason": downtime_reason, "Action Taken": action_taken, "Root Cause": root_cause, "Time to Resolve (Minutes)": time_to_resolve, "Resolved (Y/N)": resolved}
             st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([new_row])], ignore_index=True)
             append_to_google_sheets(pd.DataFrame([new_row]), "Project Management", "Downtime Issues")
-    st.subheader("Current Data")
+    st.subheader("📝 Update Downtime Status")
+    if not downtime_data.empty and "Process Name" in downtime_data.columns:
+        downtime_options = downtime_data["Process Name"].dropna().tolist()
+    else:
+        st.warning("No 'Process Name' column found in the data.")
+        downtime_options = []
+    
+    if downtime_options:
+        selected_downtime = st.selectbox("Select Downtime Issue to Update", downtime_options)
+        new_status = st.selectbox("Update Status", ["Open", "In Progress", "Resolved"])
+        update_downtime_btn = st.button("Update Downtime Status")
+        if update_downtime_btn:
+            spreadsheet = client.open("Project Management")
+            worksheet = spreadsheet.worksheet("Downtime Issues")
+            data = worksheet.get_all_records()
+            for i, row in enumerate(data, start=2):
+                if row["Process Name"] == selected_downtime:
+                    status_col_index = worksheet.find("Status").col
+                    worksheet.update_cell(i, status_col_index, new_status)
+                    st.success(f"Status updated for '{selected_downtime}' to '{new_status}'!")
+                    break
+    
+    st.subheader("📈 Downtime Trends")
+    start_date = st.date_input("Start Date", value=date.today())
+    end_date = st.date_input("End Date", value=date.today())
+    
+    if not downtime_data.empty:
+        downtime_data["Date"] = pd.to_datetime(downtime_data["Date"])
+        filtered_data = downtime_data[(downtime_data["Date"] >= pd.to_datetime(start_date)) & (downtime_data["Date"] <= pd.to_datetime(end_date))]
+        st.dataframe(filtered_data)
+        
+        st.subheader("📊 Daily Downtime Line Chart")
+        daily_downtime = filtered_data.groupby(filtered_data["Date"].dt.date).size()
+        st.line_chart(daily_downtime)
+        
+        st.subheader("📊 Pareto Chart for Downtime Reasons")
+        downtime_counts = filtered_data["Downtime Reason"].value_counts()
+        st.bar_chart(downtime_counts)
     st.dataframe(st.session_state.data)
 
 ### KPI Dashboard ###
