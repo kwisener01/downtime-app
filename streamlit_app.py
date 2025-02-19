@@ -76,7 +76,7 @@ with tab1:
     if not downtime_data.empty and "Key" in downtime_data.columns:
         downtime_options = downtime_data["Key"].dropna().tolist()
     else:
-        st.warning("No 'Process Name' column found in the data.")
+        st.warning("No 'Key' column found in the data.")
         downtime_options = []
     
     if downtime_options:
