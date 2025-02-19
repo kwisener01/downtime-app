@@ -161,9 +161,27 @@ with tab3:
     
     st.subheader("📋 Goals")
     
+    
 
         productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
     if not productivity_data.empty:
+        st.subheader("📝 Update Goal Status")
+        goal_options = productivity_data["Goal Name"].dropna().tolist()
+        if goal_options:
+            selected_goal = st.selectbox("Select Goal to Update", goal_options)
+            new_status = st.selectbox("Update Status", ["Open", "In Progress", "Completed"])
+            update_status_btn = st.button("Update Status")
+            
+            if update_status_btn:
+                spreadsheet = client.open("Project Management")
+                worksheet = spreadsheet.worksheet("Personal Productivity")
+                data = worksheet.get_all_records()
+                for i, row in enumerate(data, start=2):  # Google Sheets index starts at 2 because headers are in row 1
+                    if row["Goal Name"] == selected_goal:
+                        status_col_index = worksheet.find("Status").col  # Locate the "Status" column
+                        worksheet.update_cell(i, status_col_index, new_status)
+                        st.success(f"Status updated for '{selected_goal}' to '{new_status}'!")
+                        break
     st.subheader("📝 Update Goal Status")
         goal_options = productivity_data["Goal Name"].dropna().tolist()
         if goal_options:
@@ -217,8 +235,7 @@ with tab3:
                     st.success(f"Status updated for '{selected_goal}' to '{new_status}'!")
                     break
     productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
-    if not productivity_data.empty:
-        st.dataframe(productivity_data)
+    st.dataframe(productivity_data)
     else:
         st.warning("No goals found.")
     with st.form("goal_setting_form", clear_on_submit=True):
