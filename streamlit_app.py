@@ -204,7 +204,6 @@ with tab4:
     
 st.subheader("📋 Tasks")
 st.dataframe(task_data)
-    st.dataframe(task_data)
     
     with st.form("task_assignment_form", clear_on_submit=True):
         task_name = st.text_input("Task Name")
