@@ -4,6 +4,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime, date
 import pytz  # Timezone handling
+import requests  # For fetching motivational quotes
 
 # Define the scope
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -48,6 +49,21 @@ if "data" not in st.session_state:
 
 # App title
 st.title("Operations Management Assistant")
+
+# Fetch a motivational quote
+def get_motivational_quote():
+    try:
+        response = requests.get("https://api.quotable.io/random")
+        if response.status_code == 200:
+            quote_data = response.json()
+            return f'"{quote_data["content"]}" - {quote_data["author"]}'
+        else:
+            return "Stay motivated and keep pushing forward!"
+    except:
+        return "Stay motivated and keep pushing forward!"
+
+st.sidebar.subheader("💡 Motivational Quote")
+st.sidebar.write(get_motivational_quote())
 
 # Create tabs
 tab1, tab2, tab3 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Productivity"])
