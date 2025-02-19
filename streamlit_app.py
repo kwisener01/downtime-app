@@ -73,14 +73,14 @@ with tab1:
             st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([new_row])], ignore_index=True)
             append_to_google_sheets(pd.DataFrame([new_row]), "Project Management", "Downtime Issues")
     st.subheader("📝 Update Downtime Status")
-    if not downtime_data.empty and "Process Name" in downtime_data.columns:
-        downtime_options = downtime_data["Process Name"].dropna().tolist()
+    if not downtime_data.empty and "Key" in downtime_data.columns:
+        downtime_options = downtime_data["Key"].dropna().tolist()
     else:
         st.warning("No 'Process Name' column found in the data.")
         downtime_options = []
     
     if downtime_options:
-        selected_downtime = st.selectbox("Select Downtime Issue to Update", downtime_options)
+        selected_downtime = st.selectbox("Select Downtime Issue to Update (by Key)", downtime_options)
         new_status = st.selectbox("Update Status", ["Open", "In Progress", "Resolved"])
         update_downtime_btn = st.button("Update Downtime Status")
         if update_downtime_btn:
@@ -88,7 +88,7 @@ with tab1:
             worksheet = spreadsheet.worksheet("Downtime Issues")
             data = worksheet.get_all_records()
             for i, row in enumerate(data, start=2):
-                if row["Process Name"] == selected_downtime:
+                if row["Key"] == selected_downtime:
                     status_col_index = worksheet.find("Status").col
                     worksheet.update_cell(i, status_col_index, new_status)
                     st.success(f"Status updated for '{selected_downtime}' to '{new_status}'!")
@@ -109,6 +109,7 @@ with tab1:
         
         st.subheader("📊 Pareto Chart for Downtime Reasons")
         downtime_counts = filtered_data["Downtime Reason"].value_counts()
+        downtime_counts = downtime_counts.sort_values(ascending=False)
         st.bar_chart(downtime_counts)
     st.dataframe(st.session_state.data)
 
