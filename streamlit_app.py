@@ -184,7 +184,7 @@ with tab3:
                         break
     st.subheader("📝 Update Goal Status")
     goal_options = productivity_data["Goal Name"].dropna().tolist()
-        if goal_options:
+    if goal_options:
         selected_goal = st.selectbox("Select Goal to Update", goal_options)
     else:
         st.warning("No goals available to update.")
