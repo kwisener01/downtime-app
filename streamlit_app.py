@@ -90,7 +90,11 @@ with tab3:
     productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
     if not productivity_data.empty:
         st.subheader("📝 Update Goal Status")
-        goal_options = productivity_data["Goal Name"].dropna().tolist()
+        if "Goal Name" in productivity_data.columns:
+            goal_options = productivity_data["Goal Name"].dropna().tolist()
+        else:
+            st.warning("No 'Goal Name' column found in the data.")
+            goal_options = []
         if goal_options:
             selected_goal = st.selectbox("Select Goal to Update", goal_options)
             new_status = st.selectbox("Update Status", ["Open", "In Progress", "Completed"])
