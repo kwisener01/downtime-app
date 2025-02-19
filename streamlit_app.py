@@ -163,7 +163,7 @@ with tab3:
     
     
 
-        productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
+    productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
     if not productivity_data.empty:
         st.subheader("📝 Update Goal Status")
         goal_options = productivity_data["Goal Name"].dropna().tolist()
