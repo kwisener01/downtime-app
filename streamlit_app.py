@@ -183,7 +183,7 @@ with tab3:
                         st.success(f"Status updated for '{selected_goal}' to '{new_status}'!")
                         break
     st.subheader("📝 Update Goal Status")
-        goal_options = productivity_data["Goal Name"].dropna().tolist()
+    goal_options = productivity_data["Goal Name"].dropna().tolist()
         if goal_options:
         selected_goal = st.selectbox("Select Goal to Update", goal_options)
     else:
