@@ -72,7 +72,7 @@ with tab1:
     downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
 
     # Ensure required columns exist
-    for col in ["Resolution Time", "Process Name", "Issue", "Status", "Key"]:
+    for col in ["Resolution Time", "Process Name", "Downtime Reason", "Root Cause", "Status", "Key"]:
         if col not in downtime_data.columns:
             downtime_data[col] = "Unknown"
 
@@ -80,14 +80,15 @@ with tab1:
     with st.form("downtime_form", clear_on_submit=True):
         event_date = st.date_input("Event Date", value=date.today())
         process_name = st.text_input("Process Name")
-        issue = st.text_input("Issue Description")
+        downtime_reason = st.text_input("Downtime Reason")
+        root_cause = st.text_input("Root Cause")
         resolution_time = st.number_input("Resolution Time (minutes)", min_value=0)
         status = st.selectbox("Status", ["Open", "In Progress", "Closed"])
         key_number = st.text_input("Key Number")
         add_event_btn = st.form_submit_button("Add Event")
         if add_event_btn:
-            new_event = pd.DataFrame([[event_date, process_name, issue, resolution_time, status, key_number]], 
-                                     columns=["Date", "Process Name", "Issue", "Resolution Time", "Status", "Key"])
+            new_event = pd.DataFrame([[event_date, process_name, downtime_reason, root_cause, resolution_time, status, key_number]], 
+                                     columns=["Date", "Process Name", "Downtime Reason", "Root Cause", "Resolution Time", "Status", "Key"])
             new_event = new_event.astype(str)
             append_to_google_sheets(new_event, "Project Management", "Downtime Issues")
             st.success("Downtime event added successfully!")
@@ -117,9 +118,14 @@ with tab1:
         downtime_data["Date"] = pd.to_datetime(downtime_data["Date"], errors='coerce')
         filtered_data = downtime_data[(downtime_data["Date"] >= pd.to_datetime(start_date)) & (downtime_data["Date"] <= pd.to_datetime(end_date))]
         st.dataframe(filtered_data)
-        
-        st.subheader("📊 Pareto Chart of Issues")
-        issue_counts = filtered_data["Issue"].value_counts().sort_values(ascending=False)
-        st.bar_chart(issue_counts)
+
+        st.subheader("📊 Pareto Chart of Downtime Reasons")
+        reason_counts = filtered_data["Downtime Reason"].value_counts().sort_values(ascending=False)
+        st.bar_chart(reason_counts)
+
+        st.subheader("📊 Pareto Chart of Root Causes")
+        selected_reason = st.selectbox("Select Downtime Reason", reason_counts.index.tolist())
+        cause_counts = filtered_data[filtered_data["Downtime Reason"] == selected_reason]["Root Cause"].value_counts().sort_values(ascending=False)
+        st.bar_chart(cause_counts)
     else:
         st.warning("No downtime data found.")
