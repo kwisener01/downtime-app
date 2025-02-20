@@ -118,6 +118,10 @@ with tab3:
     st.header("🎯 Personal Productivity Tracker")
     productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
     
+    # Display Table
+    st.subheader("Productivity Tasks Table")
+    st.dataframe(productivity_data)
+    
     # Update Task Status
     st.subheader("Update Task Status")
     if not productivity_data.empty and "Task Name" in productivity_data.columns:
@@ -129,11 +133,15 @@ with tab3:
             cell = worksheet.find(selected_task)
             worksheet.update_cell(cell.row, worksheet.find("Status").col, new_status)
             st.success(f"Status updated for Task '{selected_task}' to '{new_status}'!")
-    
+
 ### Task Delegation ###
 with tab4:
     st.header("📌 Task Delegation")
     task_data = load_from_google_sheets("Project Management", "Task Delegation")
+    
+    # Display Table
+    st.subheader("Task Delegation Table")
+    st.dataframe(task_data)
     
     # Update Task Status
     st.subheader("Update Task Status")
