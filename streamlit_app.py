@@ -70,40 +70,38 @@ with tab1:
     st.header("🔧 Downtime Issues")
     downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
 
-    # Add New Downtime Issue
-    st.subheader("Add New Downtime Issue")
-    with st.form("new_downtime_issue", clear_on_submit=True):
-        date_reported = st.date_input("Date", value=date.today())
-        process_name = st.text_input("Process Name")
-        downtime_reason = st.text_input("Downtime Reason")
-        action_taken = st.text_input("Action Taken")
-        root_cause = st.text_input("Root Cause")
-        time_to_resolve = st.number_input("Time to Resolve (Minutes)", min_value=1, step=1)
-        status = st.selectbox("Status", ["Open", "In Progress", "Closed"])
-        submitted = st.form_submit_button("Add Downtime Issue")
-        if submitted:
-            new_data = pd.DataFrame([[date_reported, process_name, downtime_reason, action_taken, root_cause, time_to_resolve, status]],
-                                    columns=["Date", "Process Name", "Downtime Reason", "Action Taken", "Root Cause", "Time to Resolve (Minutes)", "Status"])
-            append_to_google_sheets(new_data, "Project Management", "Downtime Issues")
+    # Display Table
+    st.subheader("Downtime Issues Table")
+    st.dataframe(downtime_data)
 
-    # Display Table View
-    st.subheader("Downtime Data Table")
+    # Date Range Filter
+    st.subheader("Filter Downtime by Date Range")
+    start_date = st.date_input("Start Date", value=date.today())
+    end_date = st.date_input("End Date", value=date.today())
+
     if not downtime_data.empty:
-        st.dataframe(downtime_data)
+        downtime_data["Date"] = pd.to_datetime(downtime_data["Date"], errors='coerce')
+        filtered_data = downtime_data[(downtime_data["Date"] >= pd.to_datetime(start_date)) & (downtime_data["Date"] <= pd.to_datetime(end_date))]
+        filtered_data = filtered_data.dropna(subset=["Date"])
+        st.dataframe(filtered_data)
 
-    # Pareto Analysis with Column Check
-    st.subheader("Pareto Analysis")
-    if "Date" in downtime_data.columns and "Downtime Reason" in downtime_data.columns:
-        start_date = st.date_input("Start Date", value=date.today())
-        end_date = st.date_input("End Date", value=date.today())
-        filtered_data = downtime_data[(pd.to_datetime(downtime_data["Date"]) >= pd.to_datetime(start_date)) & (pd.to_datetime(downtime_data["Date"]) <= pd.to_datetime(end_date))]
-        if not filtered_data.empty:
-            pareto_data = filtered_data["Downtime Reason"].value_counts().sort_values(ascending=False)
-            st.bar_chart(pareto_data)
-        else:
-            st.warning("No data available for the selected date range.")
-    else:
-        st.warning("Required columns 'Date' or 'Downtime Reason' not found in the data.")
+    # Pareto Chart
+    st.subheader("Pareto Chart of Downtime Reasons")
+    if not filtered_data.empty and "Downtime Reason" in filtered_data.columns:
+        reason_counts = filtered_data["Downtime Reason"].value_counts().sort_values(ascending=False)
+        st.bar_chart(reason_counts)
+
+    # Update Downtime Status
+    st.subheader("Update Downtime Status")
+    if not downtime_data.empty and "Key" in downtime_data.columns:
+        selected_downtime = st.selectbox("Select Downtime Issue to Update (by Key)", downtime_data["Key"].astype(str).tolist(), key="downtime_selectbox")
+        new_status = st.selectbox("Update Status", ["Open", "In Progress", "Closed"], key="downtime_status_selectbox")
+        if st.button("Update Downtime Status"):
+            spreadsheet = client.open("Project Management")
+            worksheet = spreadsheet.worksheet("Downtime Issues")
+            cell = worksheet.find(selected_downtime)
+            worksheet.update_cell(cell.row, worksheet.find("Status").col, new_status)
+            st.success(f"Status updated for Downtime Issue '{selected_downtime}' to '{new_status}'!")
 
 ### KPI Dashboard ###
 with tab2:
