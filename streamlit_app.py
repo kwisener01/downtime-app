@@ -117,38 +117,19 @@ with tab2:
 with tab3:
     st.header("🎯 Personal Productivity Tracker")
     productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
-
+    
     # Add New Task
     st.subheader("Add New Task")
     with st.form("new_productivity_task", clear_on_submit=True):
         task_name = st.text_input("Task Name")
+        priority = st.selectbox("Priority", ["Low", "Medium", "High"])
         due_date = st.date_input("Due Date")
-        status = st.selectbox("Status", ["Not Started", "In Progress", "Completed"])
         submitted = st.form_submit_button("Add Task")
         if submitted:
-            new_task = pd.DataFrame([[task_name, due_date, status]], columns=["Task Name", "Due Date", "Status"])
+            new_task = pd.DataFrame([[task_name, priority, due_date, "Not Started"]],
+                                    columns=["Task Name", "Priority", "Due Date", "Status"])
             append_to_google_sheets(new_task, "Project Management", "Personal Productivity")
-
-    # Update Task Status
-    if not productivity_data.empty and "Task Name" in productivity_data.columns:
-        st.subheader("Update Task Status")
-        task_list = productivity_data["Task Name"].dropna().tolist()
-        selected_task = st.selectbox("Select Task to Update", task_list)
-        new_status = st.selectbox("New Status", ["Not Started", "In Progress", "Completed"])
-        if st.button("Update Task Status"):
-            spreadsheet = client.open("Project Management")
-            worksheet = spreadsheet.worksheet("Personal Productivity")
-            data = worksheet.get_all_records()
-            for i, row in enumerate(data, start=2):
-                if row["Task Name"] == selected_task:
-                    status_col_index = worksheet.find("Status").col
-                    worksheet.update_cell(i, status_col_index, new_status)
-                    st.success(f"Status updated for task '{selected_task}'!")
-                    break
-    else:
-        st.warning("No tasks found or missing 'Task Name' column.")
-
-    # Display Data
+    
     if not productivity_data.empty:
         st.dataframe(productivity_data)
 
@@ -156,38 +137,19 @@ with tab3:
 with tab4:
     st.header("📌 Task Delegation")
     task_data = load_from_google_sheets("Project Management", "Task Delegation")
-
+    
     # Add New Task
-    st.subheader("Add New Task")
+    st.subheader("Assign New Task")
     with st.form("new_delegation_task", clear_on_submit=True):
         task_name = st.text_input("Task Name")
-        assigned_to = st.text_input("Assigned To")
+        assignee = st.text_input("Assigned To")
         due_date = st.date_input("Due Date")
-        status = st.selectbox("Status", ["Not Started", "In Progress", "Completed"])
-        submitted = st.form_submit_button("Add Task")
+        priority = st.selectbox("Priority", ["Low", "Medium", "High"])
+        submitted = st.form_submit_button("Assign Task")
         if submitted:
-            new_task = pd.DataFrame([[task_name, assigned_to, due_date, status]], columns=["Task Name", "Assigned To", "Due Date", "Status"])
+            new_task = pd.DataFrame([[task_name, assignee, due_date, priority, "Not Started"]],
+                                    columns=["Task Name", "Assigned To", "Due Date", "Priority", "Status"])
             append_to_google_sheets(new_task, "Project Management", "Task Delegation")
-
-    # Update Task Status
-    if not task_data.empty and "Task Name" in task_data.columns:
-        st.subheader("Update Task Status")
-        task_list = task_data["Task Name"].dropna().tolist()
-        selected_task = st.selectbox("Select Task to Update", task_list)
-        new_status = st.selectbox("New Status", ["Not Started", "In Progress", "Completed"])
-        if st.button("Update Task Status"):
-            spreadsheet = client.open("Project Management")
-            worksheet = spreadsheet.worksheet("Task Delegation")
-            data = worksheet.get_all_records()
-            for i, row in enumerate(data, start=2):
-                if row["Task Name"] == selected_task:
-                    status_col_index = worksheet.find("Status").col
-                    worksheet.update_cell(i, status_col_index, new_status)
-                    st.success(f"Status updated for task '{selected_task}'!")
-                    break
-    else:
-        st.warning("No tasks found or missing 'Task Name' column.")
-
-    # Display Data
+    
     if not task_data.empty:
         st.dataframe(task_data)
