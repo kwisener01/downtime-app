@@ -129,3 +129,31 @@ with tab1:
         st.bar_chart(cause_counts)
     else:
         st.warning("No downtime data found.")
+
+### KPI Dashboard ###
+with tab2:
+    st.header("📊 KPI Dashboard")
+    kpi_data = load_from_google_sheets("Project Management", "KPI Dashboard")
+    if not kpi_data.empty:
+        st.dataframe(kpi_data)
+        st.line_chart(kpi_data.set_index("Date"))
+    else:
+        st.warning("No KPI data found.")
+
+### Personal Productivity ###
+with tab3:
+    st.header("🎯 Personal Productivity")
+    productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
+    if not productivity_data.empty:
+        st.dataframe(productivity_data)
+    else:
+        st.warning("No personal productivity data found.")
+
+### Task Delegation ###
+with tab4:
+    st.header("📋 Task Delegation")
+    task_data = load_from_google_sheets("Project Management", "Task Delegation")
+    if not task_data.empty:
+        st.dataframe(task_data)
+    else:
+        st.warning("No task delegation data found.")
