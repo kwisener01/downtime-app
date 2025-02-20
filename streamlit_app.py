@@ -93,43 +93,6 @@ with tab1:
             append_to_google_sheets(new_event, "Project Management", "Downtime Issues")
             st.success("Downtime event added successfully!")
 
-    st.subheader("📝 Update Downtime Status")
-    if not downtime_data.empty:
-        key_options = downtime_data["Key"].dropna().tolist()
-        selected_key = st.selectbox("Select Downtime Issue to Update (by Key)", key_options)
-        new_status = st.selectbox("Update Status", ["Open", "In Progress", "Resolved"])
-        update_downtime_btn = st.button("Update Downtime Status")
-        if update_downtime_btn:
-            spreadsheet = client.open("Project Management")
-            worksheet = spreadsheet.worksheet("Downtime Issues")
-            data = worksheet.get_all_records()
-            for i, row in enumerate(data, start=2):
-                if row["Key"] == selected_key:
-                    status_col_index = worksheet.find("Status").col
-                    worksheet.update_cell(i, status_col_index, new_status)
-                    st.success(f"Status updated for Key '{selected_key}' to '{new_status}'!")
-                    break
-
-    st.subheader("📈 Downtime Trends")
-    start_date = st.date_input("Start Date", value=date.today())
-    end_date = st.date_input("End Date", value=date.today())
-
-    if not downtime_data.empty:
-        downtime_data["Date"] = pd.to_datetime(downtime_data["Date"], errors='coerce')
-        filtered_data = downtime_data[(downtime_data["Date"] >= pd.to_datetime(start_date)) & (downtime_data["Date"] <= pd.to_datetime(end_date))]
-        st.dataframe(filtered_data)
-
-        st.subheader("📊 Pareto Chart of Downtime Reasons")
-        reason_counts = filtered_data["Downtime Reason"].value_counts().sort_values(ascending=False)
-        st.bar_chart(reason_counts)
-
-        st.subheader("📊 Pareto Chart of Root Causes")
-        selected_reason = st.selectbox("Select Downtime Reason", reason_counts.index.tolist())
-        cause_counts = filtered_data[filtered_data["Downtime Reason"] == selected_reason]["Root Cause"].value_counts().sort_values(ascending=False)
-        st.bar_chart(cause_counts)
-    else:
-        st.warning("No downtime data found.")
-
 ### KPI Dashboard ###
 with tab2:
     st.header("📊 KPI Dashboard")
@@ -149,6 +112,20 @@ with tab3:
     else:
         st.warning("No personal productivity data found.")
 
+    st.subheader("➕ Add Personal Goal")
+    with st.form("goal_form", clear_on_submit=True):
+        goal_name = st.text_input("Goal Name")
+        priority = st.selectbox("Priority", ["Low", "Medium", "High"])
+        due_date = st.date_input("Due Date")
+        status = "Open"
+        add_goal_btn = st.form_submit_button("Add Goal")
+        if add_goal_btn:
+            new_goal = pd.DataFrame([[goal_name, priority, due_date, status]], 
+                                    columns=["Goal Name", "Priority", "Due Date", "Status"])
+            new_goal = new_goal.astype(str)
+            append_to_google_sheets(new_goal, "Project Management", "Personal Productivity")
+            st.success("Goal added successfully!")
+
 ### Task Delegation ###
 with tab4:
     st.header("📋 Task Delegation")
@@ -157,3 +134,18 @@ with tab4:
         st.dataframe(task_data)
     else:
         st.warning("No task delegation data found.")
+
+    st.subheader("➕ Assign New Task")
+    with st.form("task_form", clear_on_submit=True):
+        task_name = st.text_input("Task Name")
+        assigned_to = st.text_input("Assigned To")
+        due_date = st.date_input("Due Date")
+        priority = st.selectbox("Priority", ["Low", "Medium", "High"])
+        status = "Not Started"
+        add_task_btn = st.form_submit_button("Assign Task")
+        if add_task_btn:
+            new_task = pd.DataFrame([[task_name, assigned_to, due_date, priority, status]], 
+                                     columns=["Task Name", "Assigned To", "Due Date", "Priority", "Status"])
+            new_task = new_task.astype(str)
+            append_to_google_sheets(new_task, "Project Management", "Task Delegation")
+            st.success("Task assigned successfully!")
