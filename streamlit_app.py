@@ -4,7 +4,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime, date
 import pytz
-import requests  # For fetching motivational quotes
+import requests
 
 # Define the scope
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -15,11 +15,11 @@ credentials = Credentials.from_service_account_info(st.secrets["google_sheets"],
 # Authorize gspread
 client = gspread.authorize(credentials)
 
-# Set timezone to EST (Eastern Standard Time)
+# Set timezone to EST
 est = pytz.timezone("US/Eastern")
 
 # Append data to Google Sheets
-def append_to_google_sheets(data, sheet_name="Project Management", worksheet_name="Personal Productivity"):
+def append_to_google_sheets(data, sheet_name, worksheet_name):
     try:
         spreadsheet = client.open(sheet_name)
         worksheet = spreadsheet.worksheet(worksheet_name)
@@ -30,7 +30,7 @@ def append_to_google_sheets(data, sheet_name="Project Management", worksheet_nam
         st.error(f"Spreadsheet '{sheet_name}' not found. Ensure it exists and is shared with the service account.")
 
 # Load data from Google Sheets
-def load_from_google_sheets(sheet_name="Project Management", worksheet_name="Personal Productivity"):
+def load_from_google_sheets(sheet_name, worksheet_name):
     try:
         spreadsheet = client.open(sheet_name)
         worksheet = spreadsheet.worksheet(worksheet_name)
@@ -43,7 +43,7 @@ def load_from_google_sheets(sheet_name="Project Management", worksheet_name="Per
         st.error(f"Google Sheets API error: {str(e)}. Please check access permissions and API quota.")
         return pd.DataFrame()
 
-# Fetch a motivational quote
+# Fetch motivational quote
 def get_motivational_quote():
     try:
         response = requests.get("https://api.quotable.io/random")
@@ -58,40 +58,45 @@ def get_motivational_quote():
 # App title
 st.title("Operations Management Assistant")
 
-# Display motivational quote
+# Sidebar quote
 st.sidebar.subheader("💡 Motivational Quote")
 st.sidebar.write(get_motivational_quote())
 
-# Initialize tabs
+# Tabs
 tab1, tab2, tab3, tab4 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Productivity", "Task Delegation"])
 
 ### Downtime Issues ###
 with tab1:
     st.header("🔧 Downtime Issues")
-
     downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
+    
+    # Update Status
+    if not downtime_data.empty:
+        st.subheader("Update Downtime Status")
+        key_list = downtime_data["Key"].dropna().tolist()
+        selected_key = st.selectbox("Select Key to Update", key_list)
+        new_status = st.selectbox("New Status", ["Open", "In Progress", "Closed"])
+        if st.button("Update Status"):
+            spreadsheet = client.open("Project Management")
+            worksheet = spreadsheet.worksheet("Downtime Issues")
+            for i, row in downtime_data.iterrows():
+                if row["Key"] == selected_key:
+                    worksheet.update_cell(i+2, downtime_data.columns.get_loc("Status") + 1, new_status)
+                    st.success(f"Status for Key {selected_key} updated to {new_status}")
+                    break
 
-    # Ensure required columns exist
-    for col in ["Resolution Time", "Process Name", "Downtime Reason", "Root Cause", "Status", "Key"]:
-        if col not in downtime_data.columns:
-            downtime_data[col] = "Unknown"
+    # Pareto Analysis
+    st.subheader("Pareto Analysis")
+    start_date = st.date_input("Start Date", value=date.today())
+    end_date = st.date_input("End Date", value=date.today())
+    filtered_data = downtime_data[(pd.to_datetime(downtime_data["Date"]) >= pd.to_datetime(start_date)) & (pd.to_datetime(downtime_data["Date"]) <= pd.to_datetime(end_date))]
+    if not filtered_data.empty:
+        pareto_data = filtered_data["Downtime Reason"].value_counts().sort_values(ascending=False)
+        st.bar_chart(pareto_data)
 
-    st.subheader("➕ Add Downtime Event")
-    with st.form("downtime_form", clear_on_submit=True):
-        event_date = st.date_input("Event Date", value=date.today())
-        process_name = st.text_input("Process Name")
-        downtime_reason = st.text_input("Downtime Reason")
-        root_cause = st.text_input("Root Cause")
-        resolution_time = st.number_input("Resolution Time (minutes)", min_value=0)
-        status = st.selectbox("Status", ["Open", "In Progress", "Closed"])
-        key_number = st.text_input("Key Number")
-        add_event_btn = st.form_submit_button("Add Event")
-        if add_event_btn:
-            new_event = pd.DataFrame([[event_date, process_name, downtime_reason, root_cause, resolution_time, status, key_number]], 
-                                     columns=["Date", "Process Name", "Downtime Reason", "Root Cause", "Resolution Time", "Status", "Key"])
-            new_event = new_event.astype(str)
-            append_to_google_sheets(new_event, "Project Management", "Downtime Issues")
-            st.success("Downtime event added successfully!")
+        selected_reason = st.selectbox("Select Downtime Reason for Root Cause Pareto", pareto_data.index.tolist())
+        root_cause_data = filtered_data[filtered_data["Downtime Reason"] == selected_reason]["Root Cause"].value_counts().sort_values(ascending=False)
+        st.bar_chart(root_cause_data)
 
 ### KPI Dashboard ###
 with tab2:
@@ -109,22 +114,18 @@ with tab3:
     productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
     if not productivity_data.empty:
         st.dataframe(productivity_data)
-    else:
-        st.warning("No personal productivity data found.")
-
-    st.subheader("➕ Add Personal Goal")
-    with st.form("goal_form", clear_on_submit=True):
-        goal_name = st.text_input("Goal Name")
-        priority = st.selectbox("Priority", ["Low", "Medium", "High"])
-        due_date = st.date_input("Due Date")
-        status = "Open"
-        add_goal_btn = st.form_submit_button("Add Goal")
-        if add_goal_btn:
-            new_goal = pd.DataFrame([[goal_name, priority, due_date, status]], 
-                                    columns=["Goal Name", "Priority", "Due Date", "Status"])
-            new_goal = new_goal.astype(str)
-            append_to_google_sheets(new_goal, "Project Management", "Personal Productivity")
-            st.success("Goal added successfully!")
+        st.subheader("Update Goal Status")
+        goal_list = productivity_data["Goal Name"].dropna().tolist()
+        selected_goal = st.selectbox("Select Goal to Update", goal_list)
+        new_status = st.selectbox("New Status", ["Open", "In Progress", "Completed"])
+        if st.button("Update Goal Status"):
+            spreadsheet = client.open("Project Management")
+            worksheet = spreadsheet.worksheet("Personal Productivity")
+            for i, row in productivity_data.iterrows():
+                if row["Goal Name"] == selected_goal:
+                    worksheet.update_cell(i+2, productivity_data.columns.get_loc("Status") + 1, new_status)
+                    st.success(f"Status for Goal '{selected_goal}' updated to {new_status}")
+                    break
 
 ### Task Delegation ###
 with tab4:
@@ -132,20 +133,15 @@ with tab4:
     task_data = load_from_google_sheets("Project Management", "Task Delegation")
     if not task_data.empty:
         st.dataframe(task_data)
-    else:
-        st.warning("No task delegation data found.")
-
-    st.subheader("➕ Assign New Task")
-    with st.form("task_form", clear_on_submit=True):
-        task_name = st.text_input("Task Name")
-        assigned_to = st.text_input("Assigned To")
-        due_date = st.date_input("Due Date")
-        priority = st.selectbox("Priority", ["Low", "Medium", "High"])
-        status = "Not Started"
-        add_task_btn = st.form_submit_button("Assign Task")
-        if add_task_btn:
-            new_task = pd.DataFrame([[task_name, assigned_to, due_date, priority, status]], 
-                                     columns=["Task Name", "Assigned To", "Due Date", "Priority", "Status"])
-            new_task = new_task.astype(str)
-            append_to_google_sheets(new_task, "Project Management", "Task Delegation")
-            st.success("Task assigned successfully!")
+        st.subheader("Update Task Status")
+        task_list = task_data["Task Name"].dropna().tolist()
+        selected_task = st.selectbox("Select Task to Update", task_list)
+        new_status = st.selectbox("New Status", ["Not Started", "In Progress", "Completed"])
+        if st.button("Update Task Status"):
+            spreadsheet = client.open("Project Management")
+            worksheet = spreadsheet.worksheet("Task Delegation")
+            for i, row in task_data.iterrows():
+                if row["Task Name"] == selected_task:
+                    worksheet.update_cell(i+2, task_data.columns.get_loc("Status") + 1, new_status)
+                    st.success(f"Status for Task '{selected_task}' updated to {new_status}")
+                    break
