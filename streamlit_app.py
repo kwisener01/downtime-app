@@ -86,12 +86,30 @@ with tab1:
                                     columns=["Date", "Process Name", "Downtime Reason", "Action Taken", "Root Cause", "Time to Resolve (Minutes)", "Status"])
             append_to_google_sheets(new_data, "Project Management", "Downtime Issues")
 
+    # Update Downtime Issue
+    st.subheader("Update Downtime Issue")
+    if not downtime_data.empty and "Key" in downtime_data.columns:
+        issue_keys = downtime_data["Key"].dropna().tolist()
+        selected_key = st.selectbox("Select Issue to Update", issue_keys)
+        new_status = st.selectbox("Update Status", ["Open", "In Progress", "Closed"])
+        update_btn = st.button("Update Issue")
+        if update_btn:
+            spreadsheet = client.open("Project Management")
+            worksheet = spreadsheet.worksheet("Downtime Issues")
+            data = worksheet.get_all_records()
+            for i, row in enumerate(data, start=2):
+                if row["Key"] == selected_key:
+                    status_col_index = worksheet.find("Status").col
+                    worksheet.update_cell(i, status_col_index, new_status)
+                    st.success(f"Status updated for issue '{selected_key}'!")
+                    break
+
     # Display Table View
     st.subheader("Downtime Data Table")
     if not downtime_data.empty:
         st.dataframe(downtime_data)
 
-    # Pareto Analysis with Date Range
+    # Pareto Analysis
     st.subheader("Pareto Analysis")
     start_date = st.date_input("Start Date", value=date.today())
     end_date = st.date_input("End Date", value=date.today())
@@ -107,46 +125,17 @@ with tab2:
     if not kpi_data.empty:
         st.dataframe(kpi_data)
         st.line_chart(kpi_data.set_index("Date"))
-    else:
-        st.warning("No KPI data found.")
 
 ### Personal Productivity ###
 with tab3:
-    st.header("🎯 Personal Productivity")
-
-    # Add New Goal
-    st.subheader("Add New Goal")
-    with st.form("new_goal", clear_on_submit=True):
-        goal_name = st.text_input("Goal Name")
-        goal_priority = st.selectbox("Priority", ["Low", "Medium", "High"])
-        goal_due_date = st.date_input("Due Date")
-        submitted = st.form_submit_button("Add Goal")
-        if submitted:
-            new_goal = pd.DataFrame([[goal_name, goal_priority, goal_due_date, "Open"]],
-                                    columns=["Goal Name", "Priority", "Due Date", "Status"])
-            append_to_google_sheets(new_goal, "Project Management", "Personal Productivity")
-
+    st.header("🎯 Personal Productivity Tracker")
     productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
     if not productivity_data.empty:
         st.dataframe(productivity_data)
 
 ### Task Delegation ###
 with tab4:
-    st.header("📋 Task Delegation")
-
-    # Add New Task
-    st.subheader("Assign New Task")
-    with st.form("new_task", clear_on_submit=True):
-        task_name = st.text_input("Task Name")
-        assignee = st.text_input("Assigned To")
-        due_date = st.date_input("Due Date")
-        priority = st.selectbox("Priority", ["Low", "Medium", "High"])
-        submitted = st.form_submit_button("Assign Task")
-        if submitted:
-            new_task = pd.DataFrame([[task_name, assignee, due_date, priority, "Not Started"]],
-                                    columns=["Task Name", "Assigned To", "Due Date", "Priority", "Status"])
-            append_to_google_sheets(new_task, "Project Management", "Task Delegation")
-
+    st.header("📌 Task Delegation")
     task_data = load_from_google_sheets("Project Management", "Task Delegation")
     if not task_data.empty:
         st.dataframe(task_data)
