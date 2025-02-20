@@ -167,7 +167,7 @@ with tab4:
         st.subheader("Update Task Status")
         task_list = task_data["Task Name"].dropna().tolist()
         selected_task = st.selectbox("Select Task to Update", task_list)
-        new_status = st.selectbox("New Status", ["Not Started", "In Progress", "Completed"])
+        new_status = st.selectbox("Status", ["Not Started", "In Progress", "Completed"])
         if st.button("Update Task Status"):
             spreadsheet = client.open("Project Management")
             worksheet = spreadsheet.worksheet("Task Delegation")
