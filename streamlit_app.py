@@ -69,7 +69,7 @@ tab1, tab2, tab3, tab4 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal 
 with tab1:
     st.header("🔧 Downtime Issues")
     downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
-    
+
     # Add New Downtime Issue
     st.subheader("Add New Downtime Issue")
     with st.form("new_downtime_issue", clear_on_submit=True):
@@ -85,21 +85,20 @@ with tab1:
             new_data = pd.DataFrame([[date_reported, process_name, downtime_reason, action_taken, root_cause, time_to_resolve, status]],
                                     columns=["Date", "Process Name", "Downtime Reason", "Action Taken", "Root Cause", "Time to Resolve (Minutes)", "Status"])
             append_to_google_sheets(new_data, "Project Management", "Downtime Issues")
-    
-    # Update Status
+
+    # Display Table View
+    st.subheader("Downtime Data Table")
     if not downtime_data.empty:
-        st.subheader("Update Downtime Status")
-        key_list = downtime_data["Key"].dropna().tolist()
-        selected_key = st.selectbox("Select Key to Update", key_list)
-        new_status = st.selectbox("New Status", ["Open", "In Progress", "Closed"])
-        if st.button("Update Status"):
-            spreadsheet = client.open("Project Management")
-            worksheet = spreadsheet.worksheet("Downtime Issues")
-            for i, row in downtime_data.iterrows():
-                if row["Key"] == selected_key:
-                    worksheet.update_cell(i+2, downtime_data.columns.get_loc("Status") + 1, new_status)
-                    st.success(f"Status for Key {selected_key} updated to {new_status}")
-                    break
+        st.dataframe(downtime_data)
+
+    # Pareto Analysis with Date Range
+    st.subheader("Pareto Analysis")
+    start_date = st.date_input("Start Date", value=date.today())
+    end_date = st.date_input("End Date", value=date.today())
+    filtered_data = downtime_data[(pd.to_datetime(downtime_data["Date"]) >= pd.to_datetime(start_date)) & (pd.to_datetime(downtime_data["Date"]) <= pd.to_datetime(end_date))]
+    if not filtered_data.empty:
+        pareto_data = filtered_data["Downtime Reason"].value_counts().sort_values(ascending=False)
+        st.bar_chart(pareto_data)
 
 ### KPI Dashboard ###
 with tab2:
@@ -114,7 +113,7 @@ with tab2:
 ### Personal Productivity ###
 with tab3:
     st.header("🎯 Personal Productivity")
-    
+
     # Add New Goal
     st.subheader("Add New Goal")
     with st.form("new_goal", clear_on_submit=True):
@@ -126,7 +125,7 @@ with tab3:
             new_goal = pd.DataFrame([[goal_name, goal_priority, goal_due_date, "Open"]],
                                     columns=["Goal Name", "Priority", "Due Date", "Status"])
             append_to_google_sheets(new_goal, "Project Management", "Personal Productivity")
-    
+
     productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
     if not productivity_data.empty:
         st.dataframe(productivity_data)
@@ -134,7 +133,7 @@ with tab3:
 ### Task Delegation ###
 with tab4:
     st.header("📋 Task Delegation")
-    
+
     # Add New Task
     st.subheader("Assign New Task")
     with st.form("new_task", clear_on_submit=True):
@@ -147,7 +146,7 @@ with tab4:
             new_task = pd.DataFrame([[task_name, assignee, due_date, priority, "Not Started"]],
                                     columns=["Task Name", "Assigned To", "Due Date", "Priority", "Status"])
             append_to_google_sheets(new_task, "Project Management", "Task Delegation")
-    
+
     task_data = load_from_google_sheets("Project Management", "Task Delegation")
     if not task_data.empty:
         st.dataframe(task_data)
