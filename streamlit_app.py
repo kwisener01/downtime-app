@@ -23,7 +23,7 @@ def append_to_google_sheets(data, sheet_name, worksheet_name):
     try:
         spreadsheet = client.open(sheet_name)
         worksheet = spreadsheet.worksheet(worksheet_name)
-        data_as_list = data.values.tolist()
+        data_as_list = data.astype(str).values.tolist()  # Convert all data to string before appending
         worksheet.append_rows(data_as_list, table_range="A1")
         st.success("Data appended to Google Sheets!")
     except gspread.exceptions.SpreadsheetNotFound:
