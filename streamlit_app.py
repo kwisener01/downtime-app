@@ -4,7 +4,6 @@ import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime, date
 import pytz  # Timezone handling
-import requests  # For fetching motivational quotes
 
 # Define the scope
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -45,30 +44,13 @@ def load_from_google_sheets(sheet_name="Project Management", worksheet_name="Per
 
 # Initialize session state
 if "data" not in st.session_state:
-    st.session_state.data = pd.DataFrame(columns=["Date", "Time", "Process Name", "Downtime Reason", "Action Taken", "Root Cause", "Time to Resolve (Minutes)", "Resolved (Y/N)", "Status"])
+    st.session_state.data = pd.DataFrame(columns=["Date", "Time", "Process Name", "Downtime Reason", "Action Taken", "Root Cause", "Time to Resolve (Minutes)", "Resolved (Y/N)"])
 
 # App title
 st.title("Operations Management Assistant")
 
-# Fetch a motivational quote
-def get_motivational_quote():
-    try:
-        response = requests.get("https://api.quotable.io/random")
-        if response.status_code == 200:
-            quote_data = response.json()
-            return f'"{quote_data["content"]}" - {quote_data["author"]}'
-        else:
-            return "Stay motivated and keep pushing forward!"
-    except:
-        return "Stay motivated and keep pushing forward!"
-
-st.sidebar.subheader("💡 Motivational Quote")
-st.sidebar.write(get_motivational_quote())
-
 # Create tabs
 tab1, tab2, tab3 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Productivity"])
-
-downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
 
 ### Downtime Tracking ###
 with tab1:
@@ -88,45 +70,7 @@ with tab1:
             new_row = {"Date": today_date.strftime("%Y-%m-%d"), "Time": defect_time, "Process Name": process_name, "Downtime Reason": downtime_reason, "Action Taken": action_taken, "Root Cause": root_cause, "Time to Resolve (Minutes)": time_to_resolve, "Resolved (Y/N)": resolved}
             st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([new_row])], ignore_index=True)
             append_to_google_sheets(pd.DataFrame([new_row]), "Project Management", "Downtime Issues")
-    st.subheader("📝 Update Downtime Status")
-    if not downtime_data.empty and "Key" in downtime_data.columns:
-        downtime_options = downtime_data["Key"].dropna().tolist()
-    else:
-        st.warning("No 'Key' column found in the data.")
-        downtime_options = []
-    
-    if downtime_options:
-        selected_downtime = st.selectbox("Select Downtime Issue to Update (by Key)", downtime_options)
-        new_status = st.selectbox("Update Status", ["Open", "In Progress", "Resolved"])
-        update_downtime_btn = st.button("Update Downtime Status")
-        if update_downtime_btn:
-            spreadsheet = client.open("Project Management")
-            worksheet = spreadsheet.worksheet("Downtime Issues")
-            data = worksheet.get_all_records()
-            for i, row in enumerate(data, start=2):
-                if row["Key"] == selected_downtime:
-                    status_col_index = worksheet.find("Status").col
-                    worksheet.update_cell(i, status_col_index, new_status)
-                    st.success(f"Status updated for '{selected_downtime}' to '{new_status}'!")
-                    break
-    
-    st.subheader("📈 Downtime Trends")
-    start_date = st.date_input("Start Date", value=date.today())
-    end_date = st.date_input("End Date", value=date.today())
-    
-    if not downtime_data.empty:
-        downtime_data["Date"] = pd.to_datetime(downtime_data["Date"])
-        filtered_data = downtime_data[(downtime_data["Date"] >= pd.to_datetime(start_date)) & (downtime_data["Date"] <= pd.to_datetime(end_date))]
-        st.dataframe(filtered_data)
-        
-        st.subheader("📊 Daily Downtime Line Chart")
-        daily_downtime = filtered_data.groupby(filtered_data["Date"].dt.date).size()
-        st.line_chart(daily_downtime)
-        
-        st.subheader("📊 Pareto Chart for Downtime Reasons")
-        downtime_counts = filtered_data["Downtime Reason"].value_counts()
-        downtime_counts = downtime_counts.sort_values(ascending=False)
-        st.bar_chart(downtime_counts)
+    st.subheader("Current Data")
     st.dataframe(st.session_state.data)
 
 ### KPI Dashboard ###
