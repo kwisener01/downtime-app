@@ -71,6 +71,13 @@ with tab1:
 
     downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
 
+    # Ensure 'Resolution Time' and 'Process Name' columns exist
+    if "Resolution Time" not in downtime_data.columns:
+        downtime_data["Resolution Time"] = 0
+
+    if "Process Name" in downtime_data.columns:
+        downtime_data["Process Name"] = downtime_data["Process Name"].astype(str)
+
     st.subheader("➕ Add Downtime Event")
     with st.form("downtime_form", clear_on_submit=True):
         event_date = st.date_input("Event Date", value=date.today())
@@ -90,12 +97,12 @@ with tab1:
         st.dataframe(downtime_data)
 
         st.subheader("📈 Downtime Trends")
-        downtime_data["Date"] = pd.to_datetime(downtime_data["Date"])
+        downtime_data["Date"] = pd.to_datetime(downtime_data["Date"], errors='coerce')
         trend_data = downtime_data.groupby(downtime_data["Date"].dt.date)["Resolution Time"].sum()
         st.line_chart(trend_data)
 
         st.subheader("📊 Pareto Chart of Issues")
-        issue_counts = downtime_data["Issue"].value_counts()
+        issue_counts = downtime_data["Issue"].value_counts().sort_values(ascending=False)
         st.bar_chart(issue_counts)
     else:
         st.warning("No downtime data found.")
