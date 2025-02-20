@@ -23,7 +23,7 @@ def append_to_google_sheets(data, sheet_name, worksheet_name):
     try:
         spreadsheet = client.open(sheet_name)
         worksheet = spreadsheet.worksheet(worksheet_name)
-        data_as_list = data.astype(str).values.tolist()  # Convert all data to string before appending
+        data_as_list = data.astype(str).values.tolist()
         worksheet.append_rows(data_as_list, table_range="A1")
         st.success("Data appended to Google Sheets!")
     except gspread.exceptions.SpreadsheetNotFound:
@@ -91,14 +91,19 @@ with tab1:
     if not downtime_data.empty:
         st.dataframe(downtime_data)
 
-    # Pareto Analysis
+    # Pareto Analysis with Column Check
     st.subheader("Pareto Analysis")
-    start_date = st.date_input("Start Date", value=date.today())
-    end_date = st.date_input("End Date", value=date.today())
-    filtered_data = downtime_data[(pd.to_datetime(downtime_data["Date"]) >= pd.to_datetime(start_date)) & (pd.to_datetime(downtime_data["Date"]) <= pd.to_datetime(end_date))]
-    if not filtered_data.empty:
-        pareto_data = filtered_data["Downtime Reason"].value_counts().sort_values(ascending=False)
-        st.bar_chart(pareto_data)
+    if "Date" in downtime_data.columns and "Downtime Reason" in downtime_data.columns:
+        start_date = st.date_input("Start Date", value=date.today())
+        end_date = st.date_input("End Date", value=date.today())
+        filtered_data = downtime_data[(pd.to_datetime(downtime_data["Date"]) >= pd.to_datetime(start_date)) & (pd.to_datetime(downtime_data["Date"]) <= pd.to_datetime(end_date))]
+        if not filtered_data.empty:
+            pareto_data = filtered_data["Downtime Reason"].value_counts().sort_values(ascending=False)
+            st.bar_chart(pareto_data)
+        else:
+            st.warning("No data available for the selected date range.")
+    else:
+        st.warning("Required columns 'Date' or 'Downtime Reason' not found in the data.")
 
 ### KPI Dashboard ###
 with tab2:
@@ -125,7 +130,7 @@ with tab3:
             append_to_google_sheets(new_task, "Project Management", "Personal Productivity")
 
     # Update Task Status
-    if not productivity_data.empty:
+    if not productivity_data.empty and "Task Name" in productivity_data.columns:
         st.subheader("Update Task Status")
         task_list = productivity_data["Task Name"].dropna().tolist()
         selected_task = st.selectbox("Select Task to Update", task_list)
@@ -140,6 +145,8 @@ with tab3:
                     worksheet.update_cell(i, status_col_index, new_status)
                     st.success(f"Status updated for task '{selected_task}'!")
                     break
+    else:
+        st.warning("No tasks found or missing 'Task Name' column.")
 
     # Display Data
     if not productivity_data.empty:
@@ -163,11 +170,11 @@ with tab4:
             append_to_google_sheets(new_task, "Project Management", "Task Delegation")
 
     # Update Task Status
-    if not task_data.empty:
+    if not task_data.empty and "Task Name" in task_data.columns:
         st.subheader("Update Task Status")
         task_list = task_data["Task Name"].dropna().tolist()
         selected_task = st.selectbox("Select Task to Update", task_list)
-        new_status = st.selectbox("Status", ["Not Started", "In Progress", "Completed"])
+        new_status = st.selectbox("New Status", ["Not Started", "In Progress", "Completed"])
         if st.button("Update Task Status"):
             spreadsheet = client.open("Project Management")
             worksheet = spreadsheet.worksheet("Task Delegation")
@@ -178,6 +185,8 @@ with tab4:
                     worksheet.update_cell(i, status_col_index, new_status)
                     st.success(f"Status updated for task '{selected_task}'!")
                     break
+    else:
+        st.warning("No tasks found or missing 'Task Name' column.")
 
     # Display Data
     if not task_data.empty:
