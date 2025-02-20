@@ -86,24 +86,6 @@ with tab1:
                                     columns=["Date", "Process Name", "Downtime Reason", "Action Taken", "Root Cause", "Time to Resolve (Minutes)", "Status"])
             append_to_google_sheets(new_data, "Project Management", "Downtime Issues")
 
-    # Update Downtime Issue
-    st.subheader("Update Downtime Issue")
-    if not downtime_data.empty and "Key" in downtime_data.columns:
-        issue_keys = downtime_data["Key"].dropna().tolist()
-        selected_key = st.selectbox("Select Issue to Update", issue_keys)
-        new_status = st.selectbox("Update Status", ["Open", "In Progress", "Closed"])
-        update_btn = st.button("Update Issue")
-        if update_btn:
-            spreadsheet = client.open("Project Management")
-            worksheet = spreadsheet.worksheet("Downtime Issues")
-            data = worksheet.get_all_records()
-            for i, row in enumerate(data, start=2):
-                if row["Key"] == selected_key:
-                    status_col_index = worksheet.find("Status").col
-                    worksheet.update_cell(i, status_col_index, new_status)
-                    st.success(f"Status updated for issue '{selected_key}'!")
-                    break
-
     # Display Table View
     st.subheader("Downtime Data Table")
     if not downtime_data.empty:
@@ -130,6 +112,36 @@ with tab2:
 with tab3:
     st.header("🎯 Personal Productivity Tracker")
     productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
+
+    # Add New Task
+    st.subheader("Add New Task")
+    with st.form("new_productivity_task", clear_on_submit=True):
+        task_name = st.text_input("Task Name")
+        due_date = st.date_input("Due Date")
+        status = st.selectbox("Status", ["Not Started", "In Progress", "Completed"])
+        submitted = st.form_submit_button("Add Task")
+        if submitted:
+            new_task = pd.DataFrame([[task_name, due_date, status]], columns=["Task Name", "Due Date", "Status"])
+            append_to_google_sheets(new_task, "Project Management", "Personal Productivity")
+
+    # Update Task Status
+    if not productivity_data.empty:
+        st.subheader("Update Task Status")
+        task_list = productivity_data["Task Name"].dropna().tolist()
+        selected_task = st.selectbox("Select Task to Update", task_list)
+        new_status = st.selectbox("New Status", ["Not Started", "In Progress", "Completed"])
+        if st.button("Update Task Status"):
+            spreadsheet = client.open("Project Management")
+            worksheet = spreadsheet.worksheet("Personal Productivity")
+            data = worksheet.get_all_records()
+            for i, row in enumerate(data, start=2):
+                if row["Task Name"] == selected_task:
+                    status_col_index = worksheet.find("Status").col
+                    worksheet.update_cell(i, status_col_index, new_status)
+                    st.success(f"Status updated for task '{selected_task}'!")
+                    break
+
+    # Display Data
     if not productivity_data.empty:
         st.dataframe(productivity_data)
 
@@ -137,5 +149,36 @@ with tab3:
 with tab4:
     st.header("📌 Task Delegation")
     task_data = load_from_google_sheets("Project Management", "Task Delegation")
+
+    # Add New Task
+    st.subheader("Add New Task")
+    with st.form("new_delegation_task", clear_on_submit=True):
+        task_name = st.text_input("Task Name")
+        assigned_to = st.text_input("Assigned To")
+        due_date = st.date_input("Due Date")
+        status = st.selectbox("Status", ["Not Started", "In Progress", "Completed"])
+        submitted = st.form_submit_button("Add Task")
+        if submitted:
+            new_task = pd.DataFrame([[task_name, assigned_to, due_date, status]], columns=["Task Name", "Assigned To", "Due Date", "Status"])
+            append_to_google_sheets(new_task, "Project Management", "Task Delegation")
+
+    # Update Task Status
+    if not task_data.empty:
+        st.subheader("Update Task Status")
+        task_list = task_data["Task Name"].dropna().tolist()
+        selected_task = st.selectbox("Select Task to Update", task_list)
+        new_status = st.selectbox("New Status", ["Not Started", "In Progress", "Completed"])
+        if st.button("Update Task Status"):
+            spreadsheet = client.open("Project Management")
+            worksheet = spreadsheet.worksheet("Task Delegation")
+            data = worksheet.get_all_records()
+            for i, row in enumerate(data, start=2):
+                if row["Task Name"] == selected_task:
+                    status_col_index = worksheet.find("Status").col
+                    worksheet.update_cell(i, status_col_index, new_status)
+                    st.success(f"Status updated for task '{selected_task}'!")
+                    break
+
+    # Display Data
     if not task_data.empty:
         st.dataframe(task_data)
