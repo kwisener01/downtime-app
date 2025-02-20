@@ -78,6 +78,9 @@ with tab1:
     if "Process Name" in downtime_data.columns:
         downtime_data["Process Name"] = downtime_data["Process Name"].astype(str)
 
+    if "Issue" not in downtime_data.columns:
+        downtime_data["Issue"] = "Unknown"
+
     st.subheader("➕ Add Downtime Event")
     with st.form("downtime_form", clear_on_submit=True):
         event_date = st.date_input("Event Date", value=date.today())
