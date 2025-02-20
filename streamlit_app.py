@@ -1,3 +1,6 @@
+# Initialize tabs
+tab1, tab2, tab3, tab4 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Productivity", "Task Delegation"])
+
 ### Task Delegation ###
 with tab4:
     st.header("📌 Task Delegation")
