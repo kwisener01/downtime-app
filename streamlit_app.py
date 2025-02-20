@@ -117,16 +117,16 @@ with tab2:
 with tab3:
     st.header("🎯 Personal Productivity Tracker")
     productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
-    
+
     # Display Table
     st.subheader("Productivity Tasks Table")
     st.dataframe(productivity_data)
-    
+
     # Update Task Status
     st.subheader("Update Task Status")
     if not productivity_data.empty and "Task Name" in productivity_data.columns:
-        selected_task = st.selectbox("Select Task to Update", productivity_data["Task Name"].dropna().tolist())
-        new_status = st.selectbox("Update Status", ["Not Started", "In Progress", "Completed"])
+        selected_task = st.selectbox("Select Task to Update", productivity_data["Task Name"].dropna().tolist(), key="productivity_task_selectbox")
+        new_status = st.selectbox("Update Status", ["Not Started", "In Progress", "Completed"], key="productivity_status_selectbox")
         if st.button("Update Task Status"):
             spreadsheet = client.open("Project Management")
             worksheet = spreadsheet.worksheet("Personal Productivity")
@@ -138,16 +138,16 @@ with tab3:
 with tab4:
     st.header("📌 Task Delegation")
     task_data = load_from_google_sheets("Project Management", "Task Delegation")
-    
+
     # Display Table
     st.subheader("Task Delegation Table")
     st.dataframe(task_data)
-    
+
     # Update Task Status
     st.subheader("Update Task Status")
     if not task_data.empty and "Task Name" in task_data.columns:
-        selected_task = st.selectbox("Select Task to Update", task_data["Task Name"].dropna().tolist())
-        new_status = st.selectbox("Update Status", ["Not Started", "In Progress", "Completed"])
+        selected_task = st.selectbox("Select Task to Update", task_data["Task Name"].dropna().tolist(), key="delegation_task_selectbox")
+        new_status = st.selectbox("Update Status", ["Not Started", "In Progress", "Completed"], key="delegation_status_selectbox")
         if st.button("Update Task Status"):
             spreadsheet = client.open("Project Management")
             worksheet = spreadsheet.worksheet("Task Delegation")
