@@ -69,21 +69,24 @@ tab1, tab2, tab3, tab4 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal 
 with tab1:
     st.header("🔧 Downtime Issues")
     downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
-    
+
     # Update Status
     if not downtime_data.empty:
         st.subheader("Update Downtime Status")
-        key_list = downtime_data["Key"].dropna().tolist()
-        selected_key = st.selectbox("Select Key to Update", key_list)
-        new_status = st.selectbox("New Status", ["Open", "In Progress", "Closed"])
-        if st.button("Update Status"):
-            spreadsheet = client.open("Project Management")
-            worksheet = spreadsheet.worksheet("Downtime Issues")
-            for i, row in downtime_data.iterrows():
-                if row["Key"] == selected_key:
-                    worksheet.update_cell(i+2, downtime_data.columns.get_loc("Status") + 1, new_status)
-                    st.success(f"Status for Key {selected_key} updated to {new_status}")
-                    break
+        if "Key" in downtime_data.columns:
+            key_list = downtime_data["Key"].dropna().tolist()
+            selected_key = st.selectbox("Select Key to Update", key_list)
+            new_status = st.selectbox("New Status", ["Open", "In Progress", "Closed"])
+            if st.button("Update Status"):
+                spreadsheet = client.open("Project Management")
+                worksheet = spreadsheet.worksheet("Downtime Issues")
+                for i, row in downtime_data.iterrows():
+                    if row["Key"] == selected_key:
+                        worksheet.update_cell(i+2, downtime_data.columns.get_loc("Status") + 1, new_status)
+                        st.success(f"Status for Key {selected_key} updated to {new_status}")
+                        break
+        else:
+            st.warning("No 'Key' column found in Downtime Issues data.")
 
     # Pareto Analysis
     st.subheader("Pareto Analysis")
@@ -115,17 +118,20 @@ with tab3:
     if not productivity_data.empty:
         st.dataframe(productivity_data)
         st.subheader("Update Goal Status")
-        goal_list = productivity_data["Goal Name"].dropna().tolist()
-        selected_goal = st.selectbox("Select Goal to Update", goal_list)
-        new_status = st.selectbox("New Status", ["Open", "In Progress", "Completed"])
-        if st.button("Update Goal Status"):
-            spreadsheet = client.open("Project Management")
-            worksheet = spreadsheet.worksheet("Personal Productivity")
-            for i, row in productivity_data.iterrows():
-                if row["Goal Name"] == selected_goal:
-                    worksheet.update_cell(i+2, productivity_data.columns.get_loc("Status") + 1, new_status)
-                    st.success(f"Status for Goal '{selected_goal}' updated to {new_status}")
-                    break
+        if "Goal Name" in productivity_data.columns:
+            goal_list = productivity_data["Goal Name"].dropna().tolist()
+            selected_goal = st.selectbox("Select Goal to Update", goal_list)
+            new_status = st.selectbox("New Status", ["Open", "In Progress", "Completed"])
+            if st.button("Update Goal Status"):
+                spreadsheet = client.open("Project Management")
+                worksheet = spreadsheet.worksheet("Personal Productivity")
+                for i, row in productivity_data.iterrows():
+                    if row["Goal Name"] == selected_goal:
+                        worksheet.update_cell(i+2, productivity_data.columns.get_loc("Status") + 1, new_status)
+                        st.success(f"Status for Goal '{selected_goal}' updated to {new_status}")
+                        break
+        else:
+            st.warning("No 'Goal Name' column found in Personal Productivity data.")
 
 ### Task Delegation ###
 with tab4:
@@ -134,14 +140,17 @@ with tab4:
     if not task_data.empty:
         st.dataframe(task_data)
         st.subheader("Update Task Status")
-        task_list = task_data["Task Name"].dropna().tolist()
-        selected_task = st.selectbox("Select Task to Update", task_list)
-        new_status = st.selectbox("New Status", ["Not Started", "In Progress", "Completed"])
-        if st.button("Update Task Status"):
-            spreadsheet = client.open("Project Management")
-            worksheet = spreadsheet.worksheet("Task Delegation")
-            for i, row in task_data.iterrows():
-                if row["Task Name"] == selected_task:
-                    worksheet.update_cell(i+2, task_data.columns.get_loc("Status") + 1, new_status)
-                    st.success(f"Status for Task '{selected_task}' updated to {new_status}")
-                    break
+        if "Task Name" in task_data.columns:
+            task_list = task_data["Task Name"].dropna().tolist()
+            selected_task = st.selectbox("Select Task to Update", task_list)
+            new_status = st.selectbox("New Status", ["Not Started", "In Progress", "Completed"])
+            if st.button("Update Task Status"):
+                spreadsheet = client.open("Project Management")
+                worksheet = spreadsheet.worksheet("Task Delegation")
+                for i, row in task_data.iterrows():
+                    if row["Task Name"] == selected_task:
+                        worksheet.update_cell(i+2, task_data.columns.get_loc("Status") + 1, new_status)
+                        st.success(f"Status for Task '{selected_task}' updated to {new_status}")
+                        break
+        else:
+            st.warning("No 'Task Name' column found in Task Delegation data.")
