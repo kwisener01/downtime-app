@@ -52,12 +52,10 @@ st.title("Operations Management Assistant")
 # Create tabs
 tab1, tab2, tab3 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Productivity"])
 
+# Load Downtime Data
+downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
 
-
-######################################################################
 ### Downtime Tracking ###
-#################################################################
-
 with tab1:
     st.header("Enter Downtime Issue")
     with st.form("data_entry_form", clear_on_submit=True):
@@ -75,9 +73,9 @@ with tab1:
             new_row = {"Date": today_date.strftime("%Y-%m-%d"), "Time": defect_time, "Process Name": process_name, "Downtime Reason": downtime_reason, "Action Taken": action_taken, "Root Cause": root_cause, "Time to Resolve (Minutes)": time_to_resolve, "Resolved (Y/N)": resolved}
             st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([new_row])], ignore_index=True)
             append_to_google_sheets(pd.DataFrame([new_row]), "Project Management", "Downtime Issues")
+
     st.subheader("Current Data")
     st.dataframe(st.session_state.data)
-
 
     # Display Table
     st.subheader("Downtime Issues Table")
@@ -125,11 +123,9 @@ with tab3:
     st.header("🎯 Personal Productivity Tracker")
     productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
 
-    # Display Table
     st.subheader("Productivity Tasks Table")
     st.dataframe(productivity_data)
 
-    # Update Task Status
     st.subheader("Update Task Status")
     if not productivity_data.empty and "Task Name" in productivity_data.columns:
         selected_task = st.selectbox("Select Task to Update", productivity_data["Task Name"].dropna().tolist(), key="productivity_task_selectbox")
@@ -141,7 +137,6 @@ with tab3:
             worksheet.update_cell(cell.row, worksheet.find("Status").col, new_status)
             st.success(f"Status updated for Task '{selected_task}' to '{new_status}'!")
 
-    # Add New Goal
     st.subheader("Add New Goal")
     with st.form("goal_setting_form", clear_on_submit=True):
         goal_name = st.text_input("Goal Name")
