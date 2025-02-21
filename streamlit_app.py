@@ -3,8 +3,7 @@ import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime, date
-import pytz
-import requests
+import pytz  # Timezone handling
 
 # Define the scope
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -15,22 +14,22 @@ credentials = Credentials.from_service_account_info(st.secrets["google_sheets"],
 # Authorize gspread
 client = gspread.authorize(credentials)
 
-# Set timezone to EST
+# Set timezone to EST (Eastern Standard Time)
 est = pytz.timezone("US/Eastern")
 
 # Append data to Google Sheets
-def append_to_google_sheets(data, sheet_name, worksheet_name):
+def append_to_google_sheets(data, sheet_name="Project Management", worksheet_name="Personal Productivity"):
     try:
         spreadsheet = client.open(sheet_name)
-        worksheet = spreadsheet.worksheet(worksheet_name)
-        data_as_list = data.astype(str).values.tolist()
+        worksheet = spreadsheet.worksheet(worksheet_name)  # Use the specific worksheet
+        data_as_list = data.values.tolist()
         worksheet.append_rows(data_as_list, table_range="A1")
         st.success("Data appended to Google Sheets!")
     except gspread.exceptions.SpreadsheetNotFound:
         st.error(f"Spreadsheet '{sheet_name}' not found. Ensure it exists and is shared with the service account.")
 
 # Load data from Google Sheets
-def load_from_google_sheets(sheet_name, worksheet_name):
+def load_from_google_sheets(sheet_name="Project Management", worksheet_name="Personal Productivity"):
     try:
         spreadsheet = client.open(sheet_name)
         worksheet = spreadsheet.worksheet(worksheet_name)
@@ -43,32 +42,42 @@ def load_from_google_sheets(sheet_name, worksheet_name):
         st.error(f"Google Sheets API error: {str(e)}. Please check access permissions and API quota.")
         return pd.DataFrame()
 
-# Fetch motivational quote
-def get_motivational_quote():
-    try:
-        response = requests.get("https://api.quotable.io/random")
-        if response.status_code == 200:
-            quote_data = response.json()
-            return f'"{quote_data["content"]}" - {quote_data["author"]}'
-        else:
-            return "Stay motivated and keep pushing forward!"
-    except:
-        return "Stay motivated and keep pushing forward!"
+# Initialize session state
+if "data" not in st.session_state:
+    st.session_state.data = pd.DataFrame(columns=["Date", "Time", "Process Name", "Downtime Reason", "Action Taken", "Root Cause", "Time to Resolve (Minutes)", "Resolved (Y/N)"])
 
 # App title
 st.title("Operations Management Assistant")
 
-# Sidebar quote
-st.sidebar.subheader("💡 Motivational Quote")
-st.sidebar.write(get_motivational_quote())
-
-# Tabs
+# Create tabs
 tab1, tab2, tab3 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Productivity"])
 
-### Downtime Issues ###
+
+
+######################################################################
+### Downtime Tracking ###
+#################################################################
+
 with tab1:
-    st.header("🔧 Downtime Issues")
-    downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
+    st.header("Enter Downtime Issue")
+    with st.form("data_entry_form", clear_on_submit=True):
+        today_date = st.date_input("Date", value=date.today())
+        current_time_est = datetime.now().astimezone(est).strftime("%H:%M:%S")
+        defect_time = st.text_input("Time (HH:MM:SS)", value=current_time_est)
+        process_name = st.text_input("Process Name")
+        downtime_reason = st.text_input("Downtime Reason")
+        action_taken = st.text_input("Action Taken")
+        root_cause = st.text_input("Root Cause")
+        time_to_resolve = st.number_input("Time to Resolve (Minutes)", min_value=0, step=1)
+        resolved = st.selectbox("Resolved?", ["Y", "N"])
+        submitted = st.form_submit_button("Add Data")
+        if submitted:
+            new_row = {"Date": today_date.strftime("%Y-%m-%d"), "Time": defect_time, "Process Name": process_name, "Downtime Reason": downtime_reason, "Action Taken": action_taken, "Root Cause": root_cause, "Time to Resolve (Minutes)": time_to_resolve, "Resolved (Y/N)": resolved}
+            st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([new_row])], ignore_index=True)
+            append_to_google_sheets(pd.DataFrame([new_row]), "Project Management", "Downtime Issues")
+    st.subheader("Current Data")
+    st.dataframe(st.session_state.data)
+
 
     # Display Table
     st.subheader("Downtime Issues Table")
