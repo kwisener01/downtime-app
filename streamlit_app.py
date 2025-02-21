@@ -97,6 +97,10 @@ with tab3:
         productivity_data['Priority Score'] = productivity_data.apply(calculate_priority, axis=1)
         sorted_tasks = productivity_data.sort_values(by='Priority Score', ascending=False)
 
+        show_open_priority_tasks = st.checkbox("Show Only Open Tasks in Priority Suggestions", value=False)
+        if show_open_priority_tasks:
+            sorted_tasks = sorted_tasks[sorted_tasks["Status"] == "Open"]
+
         st.subheader("Recommended Task Priorities")
         st.dataframe(sorted_tasks[['Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
 
