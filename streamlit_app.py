@@ -73,8 +73,8 @@ with tab1:
             st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([new_row])], ignore_index=True)
             append_to_google_sheets(pd.DataFrame([new_row]), "Project Management", "Downtime Issues")
 
-    st.subheader("Current Data")
-    st.dataframe(st.session_state.data)
+#    st.subheader("Current Data")
+  #  st.dataframe(st.session_state.data)
 
     # Display Table
     st.subheader("Downtime Issues Table")
