@@ -123,6 +123,19 @@ with tab3:
     st.header("🎯 Personal Productivity Tracker")
     productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
 
+    st.subheader("Add New Task")
+    with st.form("goal_setting_form", clear_on_submit=True):
+        goal_name = st.text_input("Task Name")
+        goal_priority = st.selectbox("Priority", ["Low", "Medium", "High"])
+        goal_due_date = st.date_input("Due Date")
+        add_goal_btn = st.form_submit_button("Add Goal")
+        if add_goal_btn:
+            new_goal = pd.DataFrame([[goal_name, goal_priority, goal_due_date, "Open"]], columns=["Task Name", "Priority", "Due Date", "Status"])
+            new_goal = new_goal.astype(str)
+            append_to_google_sheets(new_goal, "Project Management", "Personal Productivity")
+            st.success("Task added successfully!")
+
+    
     st.subheader("Productivity Tasks Table")
 
     show_open_tasks = st.checkbox("Show Only Open Tasks", value=False)
@@ -153,14 +166,3 @@ with tab3:
             worksheet.update_cell(cell.row, worksheet.find("Status").col, new_status)
             st.success(f"Status updated for Task '{selected_task}' to '{new_status}'!")
 
-    st.subheader("Add New Goal")
-    with st.form("goal_setting_form", clear_on_submit=True):
-        goal_name = st.text_input("Goal Name")
-        goal_priority = st.selectbox("Priority", ["Low", "Medium", "High"])
-        goal_due_date = st.date_input("Due Date")
-        add_goal_btn = st.form_submit_button("Add Goal")
-        if add_goal_btn:
-            new_goal = pd.DataFrame([[goal_name, goal_priority, goal_due_date, "Open"]], columns=["Goal Name", "Priority", "Due Date", "Status"])
-            new_goal = new_goal.astype(str)
-            append_to_google_sheets(new_goal, "Project Management", "Personal Productivity")
-            st.success("Goal added successfully!")
