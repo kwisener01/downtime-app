@@ -55,65 +55,6 @@ tab1, tab2, tab3 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Produc
 # Load Downtime Data
 downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
 
-### Downtime Tracking ###
-with tab1:
-    st.header("Enter Downtime Issue")
-    with st.form("data_entry_form", clear_on_submit=True):
-        today_date = st.date_input("Date", value=date.today())
-        current_time_est = datetime.now().astimezone(est).strftime("%H:%M:%S")
-        defect_time = st.text_input("Time (HH:MM:SS)", value=current_time_est)
-        process_name = st.text_input("Process Name")
-        downtime_reason = st.text_input("Downtime Reason")
-        action_taken = st.text_input("Action Taken")
-        root_cause = st.text_input("Root Cause")
-        time_to_resolve = st.number_input("Time to Resolve (Minutes)", min_value=0, step=1)
-        resolved = st.selectbox("Resolved?", ["Y", "N"])
-        submitted = st.form_submit_button("Add Data")
-        if submitted:
-            new_row = {"Date": today_date.strftime("%Y-%m-%d"), "Time": defect_time, "Process Name": process_name, "Downtime Reason": downtime_reason, "Action Taken": action_taken, "Root Cause": root_cause, "Time to Resolve (Minutes)": time_to_resolve, "Resolved (Y/N)": resolved}
-            st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([new_row])], ignore_index=True)
-            append_to_google_sheets(pd.DataFrame([new_row]), "Project Management", "Downtime Issues")
-
-    st.subheader("Downtime Issues Table")
-    st.dataframe(downtime_data)
-
-    st.subheader("Filter Downtime by Date Range")
-    start_date = st.date_input("Start Date", value=date.today())
-    end_date = st.date_input("End Date", value=date.today())
-
-    if not downtime_data.empty:
-        downtime_data["Date"] = pd.to_datetime(downtime_data["Date"], errors='coerce')
-        filtered_data = downtime_data[(downtime_data["Date"] >= pd.to_datetime(start_date)) & (downtime_data["Date"] <= pd.to_datetime(end_date))]
-        filtered_data = filtered_data.dropna(subset=["Date"])
-        st.dataframe(filtered_data)
-
-    st.subheader("Pareto Chart of Downtime Reasons")
-    if not filtered_data.empty and "Downtime Reason" in filtered_data.columns:
-        reason_counts = filtered_data["Downtime Reason"].value_counts().sort_values(ascending=False)
-        st.bar_chart(reason_counts)
-
-### KPI Dashboard ###
-with tab2:
-    st.header("📊 KPI Dashboard")
-    kpi_data = load_from_google_sheets("Project Management", "KPI Dashboard")
-    if not kpi_data.empty:
-        st.dataframe(kpi_data)
-        st.line_chart(kpi_data.set_index("Date"))
-
-    if not downtime_data.empty:
-        downtime_data["Time to Resolve (Minutes)"] = pd.to_numeric(downtime_data["Time to Resolve (Minutes)"], errors='coerce')
-        total_downtime = downtime_data["Time to Resolve (Minutes)"].sum()
-        avg_downtime = downtime_data["Time to Resolve (Minutes)"].mean()
-        st.subheader("Dynamic KPIs")
-        st.write(f"Total Downtime: {total_downtime} minutes")
-        st.write(f"Average Downtime: {avg_downtime:.2f} minutes")
-
-        downtime_data["Date"] = pd.to_datetime(downtime_data["Date"], errors='coerce')
-        downtime_trend = downtime_data.groupby(downtime_data["Date"].dt.to_period("M"))["Time to Resolve (Minutes)"].sum()
-        downtime_trend.index = downtime_trend.index.to_timestamp()
-        st.subheader("Downtime Trend Analysis")
-        st.line_chart(downtime_trend)
-
 ### Personal Productivity ###
 with tab3:
     st.header("🎯 Personal Productivity Tracker")
@@ -127,6 +68,37 @@ with tab3:
     st.write(f"Total Tasks: {total_tasks}")
     st.write(f"Open Tasks: {open_tasks}")
     st.write(f"Completed Tasks: {completed_tasks}")
+
+    st.subheader("AI-Powered Priority Suggestions")
+    if not productivity_data.empty:
+        productivity_data['Due Date'] = pd.to_datetime(productivity_data['Due Date'], errors='coerce')
+        today = pd.to_datetime(date.today())
+        productivity_data['Days Until Due'] = (productivity_data['Due Date'] - today).dt.days
+
+        # Priority Score Calculation
+        def calculate_priority(row):
+            priority_score = 0
+            if row['Priority'] == 'High':
+                priority_score += 3
+            elif row['Priority'] == 'Medium':
+                priority_score += 2
+            else:
+                priority_score += 1
+
+            if row['Days Until Due'] <= 3:
+                priority_score += 3
+            elif row['Days Until Due'] <= 7:
+                priority_score += 2
+            elif row['Days Until Due'] <= 14:
+                priority_score += 1
+
+            return priority_score
+
+        productivity_data['Priority Score'] = productivity_data.apply(calculate_priority, axis=1)
+        sorted_tasks = productivity_data.sort_values(by='Priority Score', ascending=False)
+
+        st.subheader("Recommended Task Priorities")
+        st.dataframe(sorted_tasks[['Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
 
     st.subheader("Add New Task")
     with st.form("goal_setting_form", clear_on_submit=True):
