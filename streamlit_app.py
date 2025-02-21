@@ -65,6 +65,7 @@ with tab2:
 
     # Dynamic KPI Calculations
     if not downtime_data.empty:
+        downtime_data["Time to Resolve (Minutes)"] = pd.to_numeric(downtime_data["Time to Resolve (Minutes)"], errors='coerce')
         total_downtime = downtime_data["Time to Resolve (Minutes)"].sum()
         avg_downtime = downtime_data["Time to Resolve (Minutes)"].mean()
         st.subheader("Dynamic KPIs")
@@ -73,7 +74,7 @@ with tab2:
 
         # Trend Analysis - Downtime Over Time
         downtime_data["Date"] = pd.to_datetime(downtime_data["Date"], errors='coerce')
-        downtime_trend = downtime_data.groupby(downtime_data["Date"].dt.to_period("M"))[["Time to Resolve (Minutes)"]].sum()
+        downtime_trend = downtime_data.groupby(downtime_data["Date"].dt.to_period("M"))["Time to Resolve (Minutes)"].sum()
         downtime_trend.index = downtime_trend.index.to_timestamp()
         st.subheader("Downtime Trend Analysis")
         st.line_chart(downtime_trend)
