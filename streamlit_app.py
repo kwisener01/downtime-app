@@ -180,7 +180,7 @@ with tab3:
     st.write(f"Open Tasks: {open_tasks}")
     st.write(f"Completed Tasks: {completed_tasks}")
 
-    st.subheader("AI-Powered Priority Suggestions")
+    st.subheader("Powered Priority Suggestions")
     if not productivity_data.empty:
         productivity_data['Due Date'] = pd.to_datetime(productivity_data['Due Date'], errors='coerce')
         today = pd.to_datetime(date.today())
@@ -210,7 +210,8 @@ with tab3:
 
         show_open_priority_tasks = st.checkbox("Show Only Open Tasks in Priority Suggestions", value=False)
         if show_open_priority_tasks:
-            sorted_tasks = sorted_tasks[sorted_tasks["Status"] == "Open","In Progress"]
+            sorted_tasks = sorted_tasks[sorted_tasks["Status"].isin(["Open", "In Progress"])]
+
 
         st.subheader("Recommended Task Priorities")
         st.dataframe(sorted_tasks[['Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
@@ -227,15 +228,15 @@ with tab3:
             append_to_google_sheets(new_goal, "Project Management", "Personal Productivity")
             st.success("Task added successfully!")
 
-    st.subheader("Productivity Tasks Table")
+#    st.subheader("Productivity Tasks Table")
 
-    show_open_tasks = st.checkbox("Show Only Open Tasks", value=False)
-    if show_open_tasks:
-        filtered_productivity_data = productivity_data[productivity_data["Status"] == "Open"]
-    else:
-        filtered_productivity_data = productivity_data
+#    show_open_tasks = st.checkbox("Show Only Open Tasks", value=False)
+#    if show_open_tasks:
+#        filtered_productivity_data = productivity_data[productivity_data["Status"] == "Open"]
+#    else:
+#        filtered_productivity_data = productivity_data
 
-    st.dataframe(filtered_productivity_data)
+ #   st.dataframe(filtered_productivity_data)
 
     st.subheader("Update Task Status")
     if not productivity_data.empty and "Task Name" in productivity_data.columns:
