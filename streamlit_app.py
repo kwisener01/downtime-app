@@ -119,7 +119,7 @@ with tab1:
         downtime_data["Date"] = pd.to_datetime(downtime_data["Date"], errors='coerce')
         downtime_data["Time to Resolve (Minutes)"] = pd.to_numeric(downtime_data["Time to Resolve (Minutes)"], errors='coerce')
 
-        st.subheader("💡 AI-Powered Insights")
+        st.subheader("💡 Insights")
 
         # Trend Analysis
         downtime_trend = downtime_data.groupby(downtime_data["Date"].dt.to_period("M"))["Time to Resolve (Minutes)"].sum()
@@ -132,7 +132,7 @@ with tab1:
             st.bar_chart(root_cause_counts, use_container_width=True)
 
         # AI Suggestions
-        st.markdown("### 🚀 AI Suggestions to Reduce Downtime")
+        st.markdown("### 🚀 Suggestions to Reduce Downtime")
         common_causes = root_cause_counts.head(3).index.tolist()
         for cause in common_causes:
             st.write(f"- **Focus on resolving root cause:** {cause}")
@@ -210,7 +210,7 @@ with tab3:
 
         show_open_priority_tasks = st.checkbox("Show Only Open Tasks in Priority Suggestions", value=False)
         if show_open_priority_tasks:
-            sorted_tasks = sorted_tasks[sorted_tasks["Status"] == "Open"]
+            sorted_tasks = sorted_tasks[sorted_tasks["Status"] == "Open","In Progress"]
 
         st.subheader("Recommended Task Priorities")
         st.dataframe(sorted_tasks[['Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
