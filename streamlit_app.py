@@ -166,27 +166,33 @@ with tab2:
         st.subheader("Downtime Trend Analysis")
         st.line_chart(downtime_trend)
 
+
 ### Personal Productivity ###
 with tab3:
     st.header("🎯 Personal Productivity Tracker")
     productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
-
+    
+    # Assign unique keys if missing
+    if "Key" not in productivity_data.columns:
+        productivity_data["Key"] = [str(uuid.uuid4()) for _ in range(len(productivity_data))]
+    
     st.subheader("Task Statistics")
     total_tasks = len(productivity_data)
     open_tasks = len(productivity_data[productivity_data["Status"] == "Open"])
     completed_tasks = len(productivity_data[productivity_data["Status"] == "Completed"])
+    completion_rate = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
 
     st.write(f"Total Tasks: {total_tasks}")
     st.write(f"Open Tasks: {open_tasks}")
     st.write(f"Completed Tasks: {completed_tasks}")
+    st.write(f"Completion Rate: {completion_rate:.2f}%")
 
-    st.subheader("Powered Priority Suggestions")
+    st.subheader("AI-Powered Priority Suggestions")
     if not productivity_data.empty:
         productivity_data['Due Date'] = pd.to_datetime(productivity_data['Due Date'], errors='coerce')
         today = pd.to_datetime(date.today())
         productivity_data['Days Until Due'] = (productivity_data['Due Date'] - today).dt.days
 
-        # Priority Score Calculation
         def calculate_priority(row):
             priority_score = 0
             if row['Priority'] == 'High':
@@ -210,12 +216,11 @@ with tab3:
 
         show_open_priority_tasks = st.checkbox("Show Only Open Tasks in Priority Suggestions", value=False)
         if show_open_priority_tasks:
-            sorted_tasks = sorted_tasks[sorted_tasks["Status"].isin(["Open", "In Progress"])]
-
+            sorted_tasks = sorted_tasks[sorted_tasks["Status"] == "Open"]
 
         st.subheader("Recommended Task Priorities")
-        st.dataframe(sorted_tasks[['Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
-
+        st.dataframe(sorted_tasks[['Key', 'Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
+    
     st.subheader("Add New Task")
     with st.form("goal_setting_form", clear_on_submit=True):
         goal_name = st.text_input("Task Name")
@@ -223,24 +228,25 @@ with tab3:
         goal_due_date = st.date_input("Due Date")
         add_goal_btn = st.form_submit_button("Add Task")
         if add_goal_btn:
-            new_goal = pd.DataFrame([[goal_name, goal_priority, goal_due_date, "Open", ""]], columns=["Task Name", "Priority", "Due Date", "Status", "Actual Close Date"])
+            new_key = str(uuid.uuid4())
+            new_goal = pd.DataFrame([[new_key, goal_name, goal_priority, goal_due_date, "Open", ""]], 
+                                    columns=["Key", "Task Name", "Priority", "Due Date", "Status", "Actual Close Date"])
             new_goal = new_goal.astype(str)
             append_to_google_sheets(new_goal, "Project Management", "Personal Productivity")
             st.success("Task added successfully!")
-
-#    st.subheader("Productivity Tasks Table")
-
-#    show_open_tasks = st.checkbox("Show Only Open Tasks", value=False)
-#    if show_open_tasks:
-#        filtered_productivity_data = productivity_data[productivity_data["Status"] == "Open"]
-#    else:
-#        filtered_productivity_data = productivity_data
-
- #   st.dataframe(filtered_productivity_data)
-
+    
+    st.subheader("Productivity Tasks Table")
+    show_open_tasks = st.checkbox("Show Only Open Tasks", value=False)
+    if show_open_tasks:
+        filtered_productivity_data = productivity_data[productivity_data["Status"] == "Open"]
+    else:
+        filtered_productivity_data = productivity_data
+    
+    st.dataframe(filtered_productivity_data)
+    
     st.subheader("Update Task Status")
-    if not productivity_data.empty and "Task Name" in productivity_data.columns:
-        selected_task = st.selectbox("Select Task to Update", productivity_data["Task Name"].dropna().tolist(), key="productivity_task_selectbox")
+    if not productivity_data.empty and "Key" in productivity_data.columns:
+        selected_task = st.selectbox("Select Task to Update", productivity_data["Key"].tolist(), key="productivity_task_selectbox")
         new_status = st.selectbox("Update Status", ["Not Started", "In Progress", "Completed"], key="productivity_status_selectbox")
         if st.button("Update Task Status"):
             spreadsheet = client.open("Project Management")
