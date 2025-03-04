@@ -168,6 +168,7 @@ with tab2:
         st.subheader("Downtime Trend Analysis")
         st.line_chart(downtime_trend)
 
+
 ### Personal Productivity ###
 with tab3:
     st.header("🎯 Personal Productivity Tracker")
@@ -222,6 +223,9 @@ with tab3:
         st.dataframe(high_value_tasks[['Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
         
         st.subheader("⚠️ Low-Value Tasks (Delegate or Remove) - 80%")
+        status_filter = st.selectbox("Filter by Status", ["All", "Open", "In Progress", "Completed"], key="low_value_task_filter")
+        if status_filter != "All":
+            low_value_tasks = low_value_tasks[low_value_tasks["Status"] == status_filter]
         st.dataframe(low_value_tasks[['Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
 
     st.subheader("Add New Task")
