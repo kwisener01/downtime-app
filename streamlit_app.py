@@ -216,12 +216,14 @@ with tab3:
         productivity_data['Priority Score'] = productivity_data.apply(calculate_priority, axis=1)
         sorted_tasks = productivity_data.sort_values(by='Priority Score', ascending=False)
 
-        high_value_tasks = sorted_tasks.head(int(len(sorted_tasks) * 0.2))  # Top 20%
+      #  high_value_tasks = sorted_tasks.head(int(len(sorted_tasks) * 0.2))  # Top 20%
         low_value_tasks = sorted_tasks.tail(int(len(sorted_tasks) * 0.8))  # Bottom 80%
 
+        # High-Value Tasks (Only Open or In Progress)
+        high_value_tasks = sorted_tasks[(sorted_tasks["Status"].isin(["Open", "In Progress"]))].head(int(len(sorted_tasks) * 0.2))
         st.subheader("🔹 High-Value Tasks (Focus) - 20%")
         st.dataframe(high_value_tasks[['Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
-        
+               
         st.subheader("⚠️ Low-Value Tasks (Delegate or Remove) - 80%")
         status_filter = st.selectbox("Filter by Status", ["All", "Open", "In Progress", "Completed"], key="low_value_task_filter")
         if status_filter != "All":
