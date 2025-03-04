@@ -237,17 +237,16 @@ with tab3:
             st.success("Task added successfully!")
     
     st.subheader("Update Task Status")
-    if not productivity_data.empty and "Key" in productivity_data.columns:
-        task_options = [f"{row['Key']}  {row['Task Name']}  {row['Priority']}  {row['Due Date']}" for _, row in productivity_data.iterrows()]
+    if not productivity_data.empty and "Task Name" in productivity_data.columns:
+        task_options = [f"{index} {row['Task Name']}  {row['Priority']}  {row['Due Date']}" for index, row in productivity_data.iterrows()]
         selected_task = st.selectbox("Select Task to Update", task_options, key="productivity_task_selectbox")
         new_status = st.selectbox("Update Status", ["Not Started", "In Progress", "Completed"], key="productivity_status_selectbox")
         if st.button("Update Task Status"):
             spreadsheet = client.open("Project Management")
             worksheet = spreadsheet.worksheet("Personal Productivity")
-            task_key = selected_task.split()[0]  # Extract Key
-            cell = worksheet.find(task_key)
-            worksheet.update_cell(cell.row, worksheet.find("Status").col, new_status)
+            task_index = int(selected_task.split()[0])  # Extract Index
+            worksheet.update_cell(task_index + 2, worksheet.find("Status").col, new_status)
             if new_status == "Completed":
                 current_date = datetime.now(est).strftime("%Y-%m-%d")
-                worksheet.update_cell(cell.row, worksheet.find("Actual Close Date").col, current_date)
+                worksheet.update_cell(task_index + 2, worksheet.find("Actual Close Date").col, current_date)
             st.success(f"Status updated for Task '{selected_task}' to '{new_status}'!")
