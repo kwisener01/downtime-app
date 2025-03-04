@@ -189,7 +189,7 @@ with tab3:
     st.write(f"Completed Tasks: {completed_tasks}")
     st.write(f"Completion Rate: {completion_rate:.2f}%")
 
-    st.subheader("AI-Powered 80/20 Time Blocking")
+    st.subheader("80/20 Time Blocking")
     if not productivity_data.empty:
         productivity_data['Due Date'] = pd.to_datetime(productivity_data['Due Date'], errors='coerce')
         today = pd.to_datetime(date.today())
