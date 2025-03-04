@@ -4,6 +4,8 @@ import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime, date
 import pytz  # Timezone handling
+import uuid  # For generating unique keys
+
 
 # Define the scope
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
