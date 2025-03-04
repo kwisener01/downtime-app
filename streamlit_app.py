@@ -236,23 +236,16 @@ with tab3:
             append_to_google_sheets(new_goal, "Project Management", "Personal Productivity")
             st.success("Task added successfully!")
     
-    st.subheader("Productivity Tasks Table")
-    show_open_tasks = st.checkbox("Show Only Open Tasks", value=False)
-    if show_open_tasks:
-        filtered_productivity_data = productivity_data[productivity_data["Status"] == "Open"]
-    else:
-        filtered_productivity_data = productivity_data
-    
-    st.dataframe(filtered_productivity_data)
-    
     st.subheader("Update Task Status")
     if not productivity_data.empty and "Key" in productivity_data.columns:
-        selected_task = st.selectbox("Select Task to Update", productivity_data["Key"].tolist(), key="productivity_task_selectbox")
+        task_options = [f"{row['Key']}  {row['Task Name']}  {row['Priority']}  {row['Due Date']}" for _, row in productivity_data.iterrows()]
+        selected_task = st.selectbox("Select Task to Update", task_options, key="productivity_task_selectbox")
         new_status = st.selectbox("Update Status", ["Not Started", "In Progress", "Completed"], key="productivity_status_selectbox")
         if st.button("Update Task Status"):
             spreadsheet = client.open("Project Management")
             worksheet = spreadsheet.worksheet("Personal Productivity")
-            cell = worksheet.find(selected_task)
+            task_key = selected_task.split()[0]  # Extract Key
+            cell = worksheet.find(task_key)
             worksheet.update_cell(cell.row, worksheet.find("Status").col, new_status)
             if new_status == "Completed":
                 current_date = datetime.now(est).strftime("%Y-%m-%d")
