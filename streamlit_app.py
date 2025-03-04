@@ -168,7 +168,6 @@ with tab2:
         st.subheader("Downtime Trend Analysis")
         st.line_chart(downtime_trend)
 
-
 ### Personal Productivity ###
 with tab3:
     st.header("🎯 Personal Productivity Tracker")
