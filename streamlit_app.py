@@ -175,7 +175,7 @@ with tab3:
     
     # Assign unique keys if missing
     if "Key" not in productivity_data.columns:
-        productivity_data["Key"] = [str(uuid.uuid4()) for _ in range(len(productivity_data))]
+        productivity_data["Key"] = range(1, len(productivity_data) + 1)
     
     st.subheader("Task Statistics")
     total_tasks = len(productivity_data)
@@ -188,7 +188,7 @@ with tab3:
     st.write(f"Completed Tasks: {completed_tasks}")
     st.write(f"Completion Rate: {completion_rate:.2f}%")
 
-    st.subheader("AI-Powered Priority Suggestions")
+    st.subheader("AI-Powered 80/20 Time Blocking")
     if not productivity_data.empty:
         productivity_data['Due Date'] = pd.to_datetime(productivity_data['Due Date'], errors='coerce')
         today = pd.to_datetime(date.today())
@@ -215,13 +215,15 @@ with tab3:
         productivity_data['Priority Score'] = productivity_data.apply(calculate_priority, axis=1)
         sorted_tasks = productivity_data.sort_values(by='Priority Score', ascending=False)
 
-        show_open_priority_tasks = st.checkbox("Show Only Open Tasks in Priority Suggestions", value=False)
-        if show_open_priority_tasks:
-            sorted_tasks = sorted_tasks[sorted_tasks["Status"] == "Open"]
+        high_value_tasks = sorted_tasks.head(int(len(sorted_tasks) * 0.2))  # Top 20%
+        low_value_tasks = sorted_tasks.tail(int(len(sorted_tasks) * 0.8))  # Bottom 80%
 
-        st.subheader("Recommended Task Priorities")
-        st.dataframe(sorted_tasks[['Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
-    
+        st.subheader("🔹 High-Value Tasks (Focus) - 20%")
+        st.dataframe(high_value_tasks[['Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
+        
+        st.subheader("⚠️ Low-Value Tasks (Delegate or Remove) - 80%")
+        st.dataframe(low_value_tasks[['Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
+
     st.subheader("Add New Task")
     with st.form("goal_setting_form", clear_on_submit=True):
         goal_name = st.text_input("Task Name")
