@@ -220,7 +220,7 @@ with tab3:
             sorted_tasks = sorted_tasks[sorted_tasks["Status"] == "Open"]
 
         st.subheader("Recommended Task Priorities")
-        st.dataframe(sorted_tasks[[ 'Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
+        st.dataframe(sorted_tasks[['Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
     
     st.subheader("Add New Task")
     with st.form("goal_setting_form", clear_on_submit=True):
@@ -229,9 +229,8 @@ with tab3:
         goal_due_date = st.date_input("Due Date")
         add_goal_btn = st.form_submit_button("Add Task")
         if add_goal_btn:
-            new_key = str(uuid.uuid4())
-            new_goal = pd.DataFrame([[new_key, goal_name, goal_priority, goal_due_date, "Open", ""]], 
-                                    columns=["Key", "Task Name", "Priority", "Due Date", "Status", "Actual Close Date"])
+            new_goal = pd.DataFrame([[goal_name, goal_priority, goal_due_date, "Open", ""]], 
+                                    columns=["Task Name", "Priority", "Due Date", "Status", "Actual Close Date"])
             new_goal = new_goal.astype(str)
             append_to_google_sheets(new_goal, "Project Management", "Personal Productivity")
             st.success("Task added successfully!")
