@@ -220,7 +220,7 @@ with tab3:
             sorted_tasks = sorted_tasks[sorted_tasks["Status"] == "Open"]
 
         st.subheader("Recommended Task Priorities")
-        st.dataframe(sorted_tasks[['Key', 'Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
+        st.dataframe(sorted_tasks[[ 'Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
     
     st.subheader("Add New Task")
     with st.form("goal_setting_form", clear_on_submit=True):
