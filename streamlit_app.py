@@ -51,6 +51,9 @@ if "data" not in st.session_state:
 # App title
 st.title("Operations Management Assistant")
 
+# Load Downtime Data
+downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
+
 # Create tabs
 tab1, tab2, tab3 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Productivity"])
 
