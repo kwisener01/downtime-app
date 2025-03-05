@@ -54,8 +54,6 @@ st.title("Operations Management Assistant")
 # Create tabs
 tab1, tab2, tab3 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Productivity"])
 
-# Load Downtime Data
-downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
 ### Downtime Tracking ###
 with tab1:
     st.header("Enter Downtime Issue")
@@ -71,16 +69,16 @@ with tab1:
         resolved = st.selectbox("Resolved?", ["Y", "N"])
         submitted = st.form_submit_button("Add Data")
         if submitted:
-            new_row = {"Date": today_date.strftime("%Y-%m-%d"), "Time": defect_time, "Process Name": process_name, "Downtime Reason": downtime_reason, "Action Taken": action_taken, "Root Cause": root_cause, "Time to Resolve (Minutes)": time_to_resolve, "Resolved (Y/N)": resolved}
-            st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([new_row])], ignore_index=True)
+            new_row = {"Index": len(downtime_data) + 1, "Date": today_date.strftime("%Y-%m-%d"), "Time": defect_time, 
+                       "Process Name": process_name, "Downtime Reason": downtime_reason, "Action Taken": action_taken, 
+                       "Root Cause": root_cause, "Time to Resolve (Minutes)": time_to_resolve, "Resolved (Y/N)": resolved}
+            downtime_data = downtime_data.append(new_row, ignore_index=True)
             append_to_google_sheets(pd.DataFrame([new_row]), "Project Management", "Downtime Issues")
-
-#    st.subheader("Current Data")
-  #  st.dataframe(st.session_state.data)
 
     # Display Table
     st.subheader("Downtime Issues Table")
     st.dataframe(downtime_data)
+
 
     # Date Range Filter
     st.subheader("Filter Downtime by Date Range")
