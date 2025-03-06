@@ -63,47 +63,56 @@ downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
 ### Downtime Tracking ###
 ##################################################################################################################
 
-with tab1:
-    st.header("Enter Downtime Issue")
-    with st.form("data_entry_form", clear_on_submit=True):
-        today_date = st.date_input("Date", value=date.today())
-        current_time_est = datetime.now().astimezone(est).strftime("%H:%M:%S")
-        defect_time = st.text_input("Time (HH:MM:SS)", value=current_time_est)
-        process_name = st.text_input("Process Name")
-        downtime_reason = st.text_input("Downtime Reason")
-        action_taken = st.text_input("Action Taken")
-        root_cause = st.text_input("Root Cause")
-        time_to_resolve = st.number_input("Time to Resolve (Minutes)", min_value=0, step=1)
-        resolved = st.selectbox("Resolved?", ["Y", "N"])
-        submitted = st.form_submit_button("Add Data")
-        
-        if submitted:
-            key = len(downtime_data) + 1  # Use index as the key
-            new_row = pd.DataFrame([{
-                "Key": key, 
-                "Date": today_date.strftime("%Y-%m-%d"), 
-                "Time": defect_time, 
-                "Process Name": process_name, 
-                "Downtime Reason": downtime_reason, 
-                "Action Taken": action_taken, 
-                "Root Cause": root_cause, 
-                "Time to Resolve (Minutes)": time_to_resolve, 
-                "Resolved (Y/N)": resolved,
-                "Status": "Open",
-                "Resolution Time": ""
-            }])
+# Enter Downtime Issue
+st.header("Enter Downtime Issue")
+with st.form("data_entry_form", clear_on_submit=True):
+    today_date = st.date_input("Date", value=date.today())
+    current_time_est = datetime.now().astimezone(est).strftime("%H:%M:%S")
+    defect_time = st.text_input("Time (HH:MM:SS)", value=current_time_est)
+    process_name = st.text_input("Process Name")
+    downtime_reason = st.text_input("Downtime Reason")
+    action_taken = st.text_input("Action Taken")
+    root_cause = st.text_input("Root Cause")
+    time_to_resolve = st.number_input("Time to Resolve (Minutes)", min_value=0, step=1)
+    resolved = st.selectbox("Resolved?", ["Y", "N"])
 
-            # Use pd.concat() instead of append() to avoid AttributeError
-            downtime_data = pd.concat([downtime_data, new_row], ignore_index=True)
-            append_to_google_sheets(new_row, "Project Management", "Downtime Issues")
+    # Auto-close issue if "Resolved" is Yes
+    status = "Closed" if resolved == "Y" else "Open"
+    
+    # Calculate Resolution Time if closed
+    resolution_time = ""
+    if resolved == "Y":
+        resolution_time = (datetime.now(est) + pd.Timedelta(minutes=time_to_resolve)).strftime("%Y-%m-%d %H:%M:%S")
 
-    # Display Table with Correct Format
-    st.subheader("Downtime Issues Table")
-    downtime_data = downtime_data[["Key", "Date", "Time", "Process Name", "Downtime Reason", "Action Taken", 
-                                   "Root Cause", "Time to Resolve (Minutes)", "Resolved (Y/N)", "Status", "Resolution Time"]]
-    st.dataframe(downtime_data)
+    submitted = st.form_submit_button("Add Data")
 
-# Update Downtime Status using Key and Process Name
+    if submitted:
+        key = len(downtime_data) + 1  # Use index as the key
+        new_row = pd.DataFrame([{
+            "Key": key, 
+            "Date": today_date.strftime("%Y-%m-%d"), 
+            "Time": defect_time, 
+            "Process Name": process_name, 
+            "Downtime Reason": downtime_reason, 
+            "Action Taken": action_taken, 
+            "Root Cause": root_cause, 
+            "Time to Resolve (Minutes)": time_to_resolve, 
+            "Resolved (Y/N)": resolved,
+            "Status": status,
+            "Resolution Time": resolution_time
+        }])
+
+        # Use pd.concat() instead of append() to avoid AttributeError
+        downtime_data = pd.concat([downtime_data, new_row], ignore_index=True)
+        append_to_google_sheets(new_row, "Project Management", "Downtime Issues")
+
+# Display Table with Correct Format
+st.subheader("Downtime Issues Table")
+downtime_data = downtime_data[["Key", "Date", "Time", "Process Name", "Downtime Reason", "Action Taken", 
+                               "Root Cause", "Time to Resolve (Minutes)", "Resolved (Y/N)", "Status", "Resolution Time"]]
+st.dataframe(downtime_data)
+
+# Update Downtime Status with Custom Resolution Time
 st.subheader("Update Downtime Status")
 if not downtime_data.empty:
     # Format options as "Key - Process Name"
@@ -112,6 +121,9 @@ if not downtime_data.empty:
                                      downtime_options, key="downtime_selectbox")
 
     new_status = st.selectbox("Update Status", ["Open", "In Progress", "Closed"], key="downtime_status_selectbox")
+    
+    # Allow user to manually update resolution time
+    custom_resolution_time = st.text_input("Custom Resolution Time (YYYY-MM-DD HH:MM:SS)", value="")
 
     if st.button("Update Downtime Status"):
         # Extract Key from the selection
@@ -127,10 +139,10 @@ if not downtime_data.empty:
 
         # If status is marked as "Closed", update the resolution time
         if new_status == "Closed":
-            resolution_time = datetime.now(est).strftime("%Y-%m-%d %H:%M:%S")
+            resolution_time = custom_resolution_time if custom_resolution_time else datetime.now(est).strftime("%Y-%m-%d %H:%M:%S")
             worksheet.update_cell(row_index, worksheet.find("Resolution Time").col, resolution_time)
-
-        st.success(f"Status updated for Downtime Issue '{selected_downtime}' to '{new_status}'!")
+        
+        st.success(f"Status updated for Downtime Issue '{selected_downtime}' to '{new_status}' with Resolution Time '{resolution_time}'!")
 
 ##################################################################################################################
 ##################################################################################################################
