@@ -78,36 +78,36 @@ with tab1:
         time_to_resolve = st.number_input("Time to Resolve (Minutes)", min_value=0, step=1)
         resolved = st.selectbox("Resolved?", ["Y", "N"])
 
-
-    # Auto-close issue if "Resolved" is Yes
-    status = "Closed" if resolved == "Y" else "Open"
     
-    # Calculate Resolution Time if closed
-    resolution_time = ""
-    if resolved == "Y":
-        resolution_time = (datetime.now(est) + pd.Timedelta(minutes=time_to_resolve)).strftime("%Y-%m-%d %H:%M:%S")
-
-    submitted = st.form_submit_button("Add Data")
-
-    if submitted:
-        key = len(downtime_data) + 1  # Use index as the key
-        new_row = pd.DataFrame([{
-            "Key": key, 
-            "Date": today_date.strftime("%Y-%m-%d"), 
-            "Time": defect_time, 
-            "Process Name": process_name, 
-            "Downtime Reason": downtime_reason, 
-            "Action Taken": action_taken, 
-            "Root Cause": root_cause, 
-            "Time to Resolve (Minutes)": time_to_resolve, 
-            "Resolved (Y/N)": resolved,
-            "Status": status,
-            "Resolution Time": resolution_time
-        }])
-
-        # Use pd.concat() instead of append() to avoid AttributeError
-        downtime_data = pd.concat([downtime_data, new_row], ignore_index=True)
-        append_to_google_sheets(new_row, "Project Management", "Downtime Issues")
+        # Auto-close issue if "Resolved" is Yes
+        status = "Closed" if resolved == "Y" else "Open"
+        
+        # Calculate Resolution Time if closed
+        resolution_time = ""
+        if resolved == "Y":
+            resolution_time = (datetime.now(est) + pd.Timedelta(minutes=time_to_resolve)).strftime("%Y-%m-%d %H:%M:%S")
+    
+        submitted = st.form_submit_button("Add Data")
+    
+        if submitted:
+            key = len(downtime_data) + 1  # Use index as the key
+            new_row = pd.DataFrame([{
+                "Key": key, 
+                "Date": today_date.strftime("%Y-%m-%d"), 
+                "Time": defect_time, 
+                "Process Name": process_name, 
+                "Downtime Reason": downtime_reason, 
+                "Action Taken": action_taken, 
+                "Root Cause": root_cause, 
+                "Time to Resolve (Minutes)": time_to_resolve, 
+                "Resolved (Y/N)": resolved,
+                "Status": status,
+                "Resolution Time": resolution_time
+            }])
+    
+            # Use pd.concat() instead of append() to avoid AttributeError
+            downtime_data = pd.concat([downtime_data, new_row], ignore_index=True)
+            append_to_google_sheets(new_row, "Project Management", "Downtime Issues")
 ###################################################################################
 
 ##################################################################################################################
