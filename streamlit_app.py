@@ -192,12 +192,18 @@ if not downtime_data.empty:
 
 
 
-# 🔎 Pareto Chart for Downtime Reasons
-st.subheader("📊 Pareto Chart of Downtime Reasons")
+
+# 📊 Pareto Chart Sorted by Total Downtime
+st.subheader("Pareto Chart of Downtime Reasons (Sorted by Total Downtime)")
 
 if not filtered_downtime.empty and "Downtime Reason" in filtered_downtime.columns:
-    reason_counts = filtered_downtime["Downtime Reason"].value_counts().sort_values(descending=True)
-    st.bar_chart(reason_counts)
+    pareto_data = (
+        filtered_downtime.groupby("Downtime Reason")["Time to Resolve (Minutes)"]
+        .sum()
+        .sort_values(ascending=False)  # Sort from highest to lowest total time
+    )
+    st.bar_chart(pareto_data)
+
 
 # 📉 Downtime Issues & AI Insights
 st.header("📉 Downtime Issues & AI Insights")
