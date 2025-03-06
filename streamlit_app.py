@@ -157,8 +157,8 @@ if not filtered_downtime.empty and "Downtime Reason" in filtered_downtime.column
 st.header("📉 Downtime Issues & AI Insights")
 
 # Display filtered downtime data
-st.subheader("Downtime Issues Table")
-st.dataframe(filtered_downtime)
+#st.subheader("Downtime Issues Table")
+#st.dataframe(filtered_downtime)
 
 # 📊 AI-Generated Insights
 st.subheader("💡 AI-Powered Insights")
