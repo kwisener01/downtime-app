@@ -63,6 +63,7 @@ downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
 ##################################################################################################################
 ### Downtime Tracking ###
 ##################################################################################################################
+with tab1:
 
 # Enter Downtime Issue
 st.header("Enter Downtime Issue")
