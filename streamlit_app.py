@@ -57,7 +57,12 @@ tab1, tab2, tab3 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Produc
 # Load Downtime Data
 downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
 
+
+##################################################################################################################
+##################################################################################################################
 ### Downtime Tracking ###
+##################################################################################################################
+
 with tab1:
     st.header("Enter Downtime Issue")
     with st.form("data_entry_form", clear_on_submit=True):
@@ -98,25 +103,39 @@ with tab1:
                                    "Root Cause", "Time to Resolve (Minutes)", "Resolved (Y/N)", "Status", "Resolution Time"]]
     st.dataframe(downtime_data)
 
-    # Update Downtime Status using Key
-    st.subheader("Update Downtime Status")
-    if not downtime_data.empty:
-        selected_downtime = st.selectbox("Select Downtime Issue to Update (by Key)", 
-                                         downtime_data["Key"].astype(str).tolist(), key="downtime_selectbox")
-        new_status = st.selectbox("Update Status", ["Open", "In Progress", "Closed"], key="downtime_status_selectbox")
-        if st.button("Update Downtime Status"):
-            spreadsheet = client.open("Project Management")
-            worksheet = spreadsheet.worksheet("Downtime Issues")
-            row_index = int(selected_downtime) + 1  # Convert key to row number in Google Sheets
-            
-            worksheet.update_cell(row_index, worksheet.find("Status").col, new_status)
+# Update Downtime Status using Key and Process Name
+st.subheader("Update Downtime Status")
+if not downtime_data.empty:
+    # Format options as "Key - Process Name"
+    downtime_options = [f"{row['Key']} - {row['Process Name']}" for _, row in downtime_data.iterrows()]
+    selected_downtime = st.selectbox("Select Downtime Issue to Update (Key - Process Name)", 
+                                     downtime_options, key="downtime_selectbox")
 
-            # If status is marked as "Closed", update the resolution time
-            if new_status == "Closed":
-                resolution_time = datetime.now(est).strftime("%Y-%m-%d %H:%M:%S")
-                worksheet.update_cell(row_index, worksheet.find("Resolution Time").col, resolution_time)
-            
-            st.success(f"Status updated for Downtime Issue '{selected_downtime}' to '{new_status}'!")
+    new_status = st.selectbox("Update Status", ["Open", "In Progress", "Closed"], key="downtime_status_selectbox")
+
+    if st.button("Update Downtime Status"):
+        # Extract Key from the selection
+        selected_key = int(selected_downtime.split(" - ")[0])
+
+        spreadsheet = client.open("Project Management")
+        worksheet = spreadsheet.worksheet("Downtime Issues")
+
+        # Find the row index using the Key
+        row_index = selected_key + 1  # Adjust for 1-based index in Google Sheets
+
+        worksheet.update_cell(row_index, worksheet.find("Status").col, new_status)
+
+        # If status is marked as "Closed", update the resolution time
+        if new_status == "Closed":
+            resolution_time = datetime.now(est).strftime("%Y-%m-%d %H:%M:%S")
+            worksheet.update_cell(row_index, worksheet.find("Resolution Time").col, resolution_time)
+
+        st.success(f"Status updated for Downtime Issue '{selected_downtime}' to '{new_status}'!")
+
+##################################################################################################################
+##################################################################################################################
+##################################################################################################################
+##################################################################################################################
 
 ### KPI Dashboard ###
 with tab2:
