@@ -66,17 +66,18 @@ downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
 with tab1:
 
 # Enter Downtime Issue
-st.header("Enter Downtime Issue")
-with st.form("data_entry_form", clear_on_submit=True):
-    today_date = st.date_input("Date", value=date.today())
-    current_time_est = datetime.now().astimezone(est).strftime("%H:%M:%S")
-    defect_time = st.text_input("Time (HH:MM:SS)", value=current_time_est)
-    process_name = st.text_input("Process Name")
-    downtime_reason = st.text_input("Downtime Reason")
-    action_taken = st.text_input("Action Taken")
-    root_cause = st.text_input("Root Cause")
-    time_to_resolve = st.number_input("Time to Resolve (Minutes)", min_value=0, step=1)
-    resolved = st.selectbox("Resolved?", ["Y", "N"])
+    st.header("Enter Downtime Issue")
+    with st.form("data_entry_form", clear_on_submit=True):
+        today_date = st.date_input("Date", value=date.today())
+        current_time_est = datetime.now().astimezone(est).strftime("%H:%M:%S")
+        defect_time = st.text_input("Time (HH:MM:SS)", value=current_time_est)
+        process_name = st.text_input("Process Name")
+        downtime_reason = st.text_input("Downtime Reason")
+        action_taken = st.text_input("Action Taken")
+        root_cause = st.text_input("Root Cause")
+        time_to_resolve = st.number_input("Time to Resolve (Minutes)", min_value=0, step=1)
+        resolved = st.selectbox("Resolved?", ["Y", "N"])
+
 
     # Auto-close issue if "Resolved" is Yes
     status = "Closed" if resolved == "Y" else "Open"
