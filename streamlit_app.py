@@ -105,12 +105,35 @@ with st.form("data_entry_form", clear_on_submit=True):
         # Use pd.concat() instead of append() to avoid AttributeError
         downtime_data = pd.concat([downtime_data, new_row], ignore_index=True)
         append_to_google_sheets(new_row, "Project Management", "Downtime Issues")
-
-# Display Table with Correct Format
+###################################################################################
+# Display Table with Filters
 st.subheader("Downtime Issues Table")
-downtime_data = downtime_data[["Key", "Date", "Time", "Process Name", "Downtime Reason", "Action Taken", 
-                               "Root Cause", "Time to Resolve (Minutes)", "Resolved (Y/N)", "Status", "Resolution Time"]]
-st.dataframe(downtime_data)
+
+# Checkbox to show only open issues
+show_open_only = st.checkbox("Show Only Open Issues", value=False, key="filter_open_issues")
+
+# Date range filter
+st.subheader("Filter Downtime by Date Range")
+start_date = st.date_input("Start Date", value=date.today(), key="start_date_filter")
+end_date = st.date_input("End Date", value=date.today(), key="end_date_filter")
+
+# Apply filters to downtime data
+filtered_downtime = downtime_data.copy()
+
+# Filter open issues if checkbox is selected
+if show_open_only:
+    filtered_downtime = filtered_downtime[filtered_downtime["Status"] != "Closed"]
+
+# Apply date range filter
+filtered_downtime["Date"] = pd.to_datetime(filtered_downtime["Date"], errors='coerce')
+filtered_downtime = filtered_downtime[
+    (filtered_downtime["Date"] >= pd.to_datetime(start_date)) & 
+    (filtered_downtime["Date"] <= pd.to_datetime(end_date))
+]
+
+# Display filtered downtime table
+st.dataframe(filtered_downtime)
+######################################################################################3
 
 # Update Downtime Status with Custom Resolution Time
 st.subheader("Update Downtime Status")
