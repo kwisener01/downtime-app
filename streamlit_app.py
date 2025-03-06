@@ -74,7 +74,7 @@ with tab1:
         
         if submitted:
             key = len(downtime_data) + 1  # Use index as the key
-            new_row = {
+            new_row = pd.DataFrame([{
                 "Key": key, 
                 "Date": today_date.strftime("%Y-%m-%d"), 
                 "Time": defect_time, 
@@ -86,9 +86,11 @@ with tab1:
                 "Resolved (Y/N)": resolved,
                 "Status": "Open",
                 "Resolution Time": ""
-            }
-            downtime_data = downtime_data.append(new_row, ignore_index=True)
-            append_to_google_sheets(pd.DataFrame([new_row]), "Project Management", "Downtime Issues")
+            }])
+
+            # Use pd.concat() instead of append() to avoid AttributeError
+            downtime_data = pd.concat([downtime_data, new_row], ignore_index=True)
+            append_to_google_sheets(new_row, "Project Management", "Downtime Issues")
 
     # Display Table with Correct Format
     st.subheader("Downtime Issues Table")
