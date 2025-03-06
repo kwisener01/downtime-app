@@ -5,6 +5,7 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime, date
 import pytz  # Timezone handling
 import uuid  # For generating unique keys
+import matplotlib.pyplot as plt
 
 
 # Define the scope
@@ -193,16 +194,41 @@ if not downtime_data.empty:
 
 
 
-# 📊 Pareto Chart Sorted by Total Downtime
+
+# 📊 Pareto Chart: Sorted by Total Downtime with Cumulative Line
 st.subheader("Pareto Chart of Downtime Reasons (Sorted by Total Downtime)")
 
 if not filtered_downtime.empty and "Downtime Reason" in filtered_downtime.columns:
+    # Aggregate downtime per reason and sort from largest to smallest
     pareto_data = (
         filtered_downtime.groupby("Downtime Reason")["Time to Resolve (Minutes)"]
         .sum()
-        .sort_values(ascending=False)  # Sort from highest to lowest total time
+        .sort_values(ascending=False)
     )
-    st.bar_chart(pareto_data)
+
+    # Compute cumulative percentage
+    cumulative_percentage = pareto_data.cumsum() / pareto_data.sum() * 100
+
+    # Plotting with Matplotlib to ensure proper formatting
+    fig, ax1 = plt.subplots(figsize=(10, 5))
+
+    # Bar chart (Downtime per Reason)
+    ax1.bar(pareto_data.index, pareto_data.values, color="blue", alpha=0.6, label="Total Downtime (Minutes)")
+    ax1.set_ylabel("Total Downtime (Minutes)", color="blue")
+    ax1.tick_params(axis="y", labelcolor="blue")
+    ax1.set_xticklabels(pareto_data.index, rotation=45, ha="right")
+
+    # Secondary axis: Cumulative Pareto Line
+    ax2 = ax1.twinx()
+    ax2.plot(pareto_data.index, cumulative_percentage, color="red", marker="o", linestyle="-", label="Cumulative %")
+    ax2.set_ylabel("Cumulative Percentage (%)", color="red")
+    ax2.tick_params(axis="y", labelcolor="red")
+    ax2.set_ylim(0, 110)
+
+    # Title and legend
+    ax1.set_title("Pareto Chart of Downtime Reasons")
+    fig.tight_layout()
+    st.pyplot(fig)
 
 
 # 📉 Downtime Issues & AI Insights
