@@ -107,18 +107,6 @@ with st.form("data_entry_form", clear_on_submit=True):
         append_to_google_sheets(new_row, "Project Management", "Downtime Issues")
 ###################################################################################
 
-# 📊 Downtime Statistics
-st.subheader("📈 Downtime Statistics")
-total_issues = len(filtered_downtime)
-open_issues = len(filtered_downtime[filtered_downtime["Status"] != "Closed"])
-closed_issues = total_issues - open_issues
-avg_resolution_time = filtered_downtime["Time to Resolve (Minutes)"].mean()
-
-st.write(f"**Total Issues:** {total_issues}")
-st.write(f"**Open Issues:** {open_issues}")
-st.write(f"**Closed Issues:** {closed_issues}")
-st.write(f"**Avg Resolution Time:** {avg_resolution_time:.2f} minutes")
-
 ##################################################################################################################
 ##################################################################################################################
 
@@ -151,6 +139,18 @@ filtered_downtime = filtered_downtime[
 st.dataframe(filtered_downtime)
 ##################################################################################################################
 ##################################################################################################################
+
+# 📊 Downtime Statistics
+st.subheader("📈 Downtime Statistics")
+total_issues = len(filtered_downtime)
+open_issues = len(filtered_downtime[filtered_downtime["Status"] != "Closed"])
+closed_issues = total_issues - open_issues
+avg_resolution_time = filtered_downtime["Time to Resolve (Minutes)"].mean()
+
+st.write(f"**Total Issues:** {total_issues}")
+st.write(f"**Open Issues:** {open_issues}")
+st.write(f"**Closed Issues:** {closed_issues}")
+st.write(f"**Avg Resolution Time:** {avg_resolution_time:.2f} minutes")
 
 
 # Update Downtime Status with Custom Resolution Time
