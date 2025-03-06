@@ -153,6 +153,69 @@ if not filtered_downtime.empty and "Downtime Reason" in filtered_downtime.column
     reason_counts = filtered_downtime["Downtime Reason"].value_counts().sort_values(ascending=False)
     st.bar_chart(reason_counts)
 
+# 📉 Downtime Issues & AI Insights
+st.header("📉 Downtime Issues & AI Insights")
+
+# Display filtered downtime data
+st.subheader("Downtime Issues Table")
+st.dataframe(filtered_downtime)
+
+# 📊 AI-Generated Insights
+st.subheader("💡 AI-Powered Insights")
+
+if not filtered_downtime.empty:
+    filtered_downtime["Date"] = pd.to_datetime(filtered_downtime["Date"], errors='coerce')
+    filtered_downtime["Time to Resolve (Minutes)"] = pd.to_numeric(filtered_downtime["Time to Resolve (Minutes)"], errors='coerce')
+
+    # 🚨 Identify Top 3 Frequent Root Causes
+    if "Root Cause" in filtered_downtime.columns:
+        root_cause_counts = filtered_downtime["Root Cause"].value_counts()
+        top_root_causes = root_cause_counts.head(3)
+
+        st.markdown("### 🔥 **Top 3 Root Causes**")
+        for cause, count in top_root_causes.items():
+            st.write(f"- **{cause}**: {count} occurrences")
+
+    # ⚠️ Flag High-Resolution Time Issues
+    high_res_time_issues = filtered_downtime[filtered_downtime["Time to Resolve (Minutes)"] > filtered_downtime["Time to Resolve (Minutes)"].mean()]
+    
+    if not high_res_time_issues.empty:
+        st.markdown("### ⏳ **High-Resolution Time Downtime Issues**")
+        st.dataframe(high_res_time_issues[["Key", "Process Name", "Downtime Reason", "Time to Resolve (Minutes)"]])
+
+    # 📈 Trend Analysis for Recurring Issues
+    downtime_trend = filtered_downtime.groupby(filtered_downtime["Date"].dt.to_period("M"))["Time to Resolve (Minutes)"].sum()
+    downtime_trend.index = downtime_trend.index.to_timestamp()
+    
+    st.subheader("📈 Downtime Trend Analysis")
+    st.line_chart(downtime_trend)
+
+# 🔍 AI-Powered Suggestions
+st.subheader("🚀 AI-Powered Suggestions for Improvement")
+
+if not filtered_downtime.empty:
+    st.markdown("### 🛠 **Actionable Recommendations**")
+
+    # 🛑 Preventive Maintenance for Top Causes
+    if not top_root_causes.empty:
+        for cause in top_root_causes.index:
+            st.write(f"- **Implement a Preventive Maintenance Plan for:** {cause}")
+
+    # ⚙️ Training & SOP Adjustments
+    if len(top_root_causes) > 1:
+        st.write("- **Review standard operating procedures (SOPs)** for recurring downtime issues.")
+        st.write("- **Provide additional training** for operators on handling the most common issues.")
+
+    # ⏱ Reducing High-Resolution Time
+    if not high_res_time_issues.empty:
+        st.write("- **Investigate downtime issues with unusually high resolution times** and optimize response strategies.")
+
+    # ⚡ Urgent Action Alert
+    if filtered_downtime["Time to Resolve (Minutes)"].mean() > 30:
+        st.warning("⚠️ High average resolution time detected! Consider faster troubleshooting processes.")
+
+
+
 ######################################################################################3
 
 # Update Downtime Status with Custom Resolution Time
