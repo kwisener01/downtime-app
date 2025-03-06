@@ -133,6 +133,26 @@ filtered_downtime = filtered_downtime[
 
 # Display filtered downtime table
 st.dataframe(filtered_downtime)
+
+# 📊 Downtime Statistics
+st.subheader("📈 Downtime Statistics")
+total_issues = len(filtered_downtime)
+open_issues = len(filtered_downtime[filtered_downtime["Status"] != "Closed"])
+closed_issues = total_issues - open_issues
+avg_resolution_time = filtered_downtime["Time to Resolve (Minutes)"].mean()
+
+st.write(f"**Total Issues:** {total_issues}")
+st.write(f"**Open Issues:** {open_issues}")
+st.write(f"**Closed Issues:** {closed_issues}")
+st.write(f"**Avg Resolution Time:** {avg_resolution_time:.2f} minutes")
+
+# 🔎 Pareto Chart for Downtime Reasons
+st.subheader("📊 Pareto Chart of Downtime Reasons")
+
+if not filtered_downtime.empty and "Downtime Reason" in filtered_downtime.columns:
+    reason_counts = filtered_downtime["Downtime Reason"].value_counts().sort_values(ascending=False)
+    st.bar_chart(reason_counts)
+
 ######################################################################################3
 
 # Update Downtime Status with Custom Resolution Time
