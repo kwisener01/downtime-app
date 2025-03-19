@@ -113,194 +113,194 @@ with tab1:
 ##################################################################################################################
 ##################################################################################################################
 
-# Display Table with Filters
-st.subheader("Downtime Issues Table")
-
-# Checkbox to show only open issues
-show_open_only = st.checkbox("Show Only Open Issues", value=False, key="filter_open_issues")
-
-# Date range filter
-st.subheader("Filter Downtime by Date Range")
-start_date = st.date_input("Start Date", value=date.today(), key="start_date_filter")
-end_date = st.date_input("End Date", value=date.today(), key="end_date_filter")
-
-# Apply filters to downtime data
-filtered_downtime = downtime_data.copy()
-
-# Filter open issues if checkbox is selected
-if show_open_only:
-    filtered_downtime = filtered_downtime[filtered_downtime["Status"] != "Closed"]
-
-# Apply date range filter
-filtered_downtime["Date"] = pd.to_datetime(filtered_downtime["Date"], errors='coerce')
-filtered_downtime = filtered_downtime[
-    (filtered_downtime["Date"] >= pd.to_datetime(start_date)) & 
-    (filtered_downtime["Date"] <= pd.to_datetime(end_date))
-]
-
-# Display filtered downtime table
-st.dataframe(filtered_downtime)
-##################################################################################################################
-##################################################################################################################
-
-# 📊 Downtime Statistics
-st.subheader("📈 Downtime Statistics")
-total_issues = len(filtered_downtime)
-open_issues = len(filtered_downtime[filtered_downtime["Status"] != "Closed"])
-closed_issues = total_issues - open_issues
-avg_resolution_time = filtered_downtime["Time to Resolve (Minutes)"].mean()
-
-st.write(f"**Total Issues:** {total_issues}")
-st.write(f"**Open Issues:** {open_issues}")
-st.write(f"**Closed Issues:** {closed_issues}")
-st.write(f"**Avg Resolution Time:** {avg_resolution_time:.2f} minutes")
-
-
-# Update Downtime Status with Custom Resolution Time
-st.subheader("Update Downtime Status")
-if not downtime_data.empty:
-    # Format options as "Key - Process Name"
-    downtime_options = [f"{row['Key']} - {row['Process Name']}" for _, row in downtime_data.iterrows()]
-    selected_downtime = st.selectbox("Select Downtime Issue to Update (Key - Process Name)", 
-                                     downtime_options, key="downtime_selectbox")
-
-    new_status = st.selectbox("Update Status", ["Open", "In Progress", "Closed"], key="downtime_status_selectbox")
+    # Display Table with Filters
+    st.subheader("Downtime Issues Table")
     
-    # Allow user to manually update resolution time
-    custom_resolution_time = st.text_input("Custom Resolution Time (YYYY-MM-DD HH:MM:SS)", value="")
-
-    if st.button("Update Downtime Status"):
-        # Extract Key from the selection
-        selected_key = int(selected_downtime.split(" - ")[0])
-
-        spreadsheet = client.open("Project Management")
-        worksheet = spreadsheet.worksheet("Downtime Issues")
-
-        # Find the row index using the Key
-        row_index = selected_key + 1  # Adjust for 1-based index in Google Sheets
-
-        worksheet.update_cell(row_index, worksheet.find("Status").col, new_status)
-
-        # If status is marked as "Closed", update the resolution time
-        if new_status == "Closed":
-            resolution_time = custom_resolution_time if custom_resolution_time else datetime.now(est).strftime("%Y-%m-%d %H:%M:%S")
-            worksheet.update_cell(row_index, worksheet.find("Resolution Time").col, resolution_time)
-        
-        st.success(f"Status updated for Downtime Issue '{selected_downtime}' to '{new_status}' with Resolution Time '{resolution_time}'!")
-
-##################################################################################################################
-##################################################################################################################
-##################################################################################################################
-
-
-
-
-
-
-# 📊 Pareto Chart: Sorted by Total Downtime with Cumulative Line
-st.subheader("Pareto Chart of Downtime Reasons (Sorted by Total Downtime)")
-
-if not filtered_downtime.empty and "Downtime Reason" in filtered_downtime.columns:
-    # Aggregate downtime per reason and sort from largest to smallest
-    pareto_data = (
-        filtered_downtime.groupby("Downtime Reason")["Time to Resolve (Minutes)"]
-        .sum()
-        .sort_values(ascending=False)
-    )
-
-    # Compute cumulative percentage
-    cumulative_percentage = pareto_data.cumsum() / pareto_data.sum() * 100
-
-    # Plotting with Matplotlib to ensure proper formatting
-    fig, ax1 = plt.subplots(figsize=(10, 5))
-
-    # Bar chart (Downtime per Reason)
-    ax1.bar(pareto_data.index, pareto_data.values, color="blue", alpha=0.6, label="Total Downtime (Minutes)")
-    ax1.set_ylabel("Total Downtime (Minutes)", color="blue")
-    ax1.tick_params(axis="y", labelcolor="blue")
-    ax1.set_xticklabels(pareto_data.index, rotation=45, ha="right")
-
-    # Secondary axis: Cumulative Pareto Line
-    ax2 = ax1.twinx()
-    ax2.plot(pareto_data.index, cumulative_percentage, color="red", marker="o", linestyle="-", label="Cumulative %")
-    ax2.set_ylabel("Cumulative Percentage (%)", color="red")
-    ax2.tick_params(axis="y", labelcolor="red")
-    ax2.set_ylim(0, 110)
-
-    # Title and legend
-    ax1.set_title("Pareto Chart of Downtime Reasons")
-    fig.tight_layout()
-    st.pyplot(fig)
-
-
-# 📉 Downtime Issues & AI Insights
-st.header("📉 Downtime Issues & AI Insights")
-
-# Display filtered downtime data
-#st.subheader("Downtime Issues Table")
-#st.dataframe(filtered_downtime)
-
-# 📊 AI-Generated Insights
-st.subheader("💡 AI-Powered Insights")
-
-if not filtered_downtime.empty:
+    # Checkbox to show only open issues
+    show_open_only = st.checkbox("Show Only Open Issues", value=False, key="filter_open_issues")
+    
+    # Date range filter
+    st.subheader("Filter Downtime by Date Range")
+    start_date = st.date_input("Start Date", value=date.today(), key="start_date_filter")
+    end_date = st.date_input("End Date", value=date.today(), key="end_date_filter")
+    
+    # Apply filters to downtime data
+    filtered_downtime = downtime_data.copy()
+    
+    # Filter open issues if checkbox is selected
+    if show_open_only:
+        filtered_downtime = filtered_downtime[filtered_downtime["Status"] != "Closed"]
+    
+    # Apply date range filter
     filtered_downtime["Date"] = pd.to_datetime(filtered_downtime["Date"], errors='coerce')
-    filtered_downtime["Time to Resolve (Minutes)"] = pd.to_numeric(filtered_downtime["Time to Resolve (Minutes)"], errors='coerce')
-
-    # 🚨 Identify Top 3 Frequent Root Causes
-    if "Root Cause" in filtered_downtime.columns:
-        root_cause_counts = filtered_downtime["Root Cause"].value_counts()
-        top_root_causes = root_cause_counts.head(3)
-
-        st.markdown("### 🔥 **Top 3 Root Causes**")
-        for cause, count in top_root_causes.items():
-            st.write(f"- **{cause}**: {count} occurrences")
-
-    # ⚠️ Flag High-Resolution Time Issues
-    high_res_time_issues = filtered_downtime[filtered_downtime["Time to Resolve (Minutes)"] > filtered_downtime["Time to Resolve (Minutes)"].mean()]
+    filtered_downtime = filtered_downtime[
+        (filtered_downtime["Date"] >= pd.to_datetime(start_date)) & 
+        (filtered_downtime["Date"] <= pd.to_datetime(end_date))
+    ]
     
-    if not high_res_time_issues.empty:
-        st.markdown("### ⏳ **High-Resolution Time Downtime Issues**")
-        st.dataframe(high_res_time_issues[["Key", "Process Name", "Downtime Reason", "Time to Resolve (Minutes)"]])
-
-    # 📈 Trend Analysis for Recurring Issues
-    downtime_trend = filtered_downtime.groupby(filtered_downtime["Date"].dt.to_period("M"))["Time to Resolve (Minutes)"].sum()
-    downtime_trend.index = downtime_trend.index.to_timestamp()
+    # Display filtered downtime table
+    st.dataframe(filtered_downtime)
+    ##################################################################################################################
+    ##################################################################################################################
     
-    st.subheader("📈 Downtime Trend Analysis")
-    st.line_chart(downtime_trend)
-
-# 🔍 AI-Powered Suggestions
-st.subheader("🚀 AI-Powered Suggestions for Improvement")
-
-if not filtered_downtime.empty:
-    st.markdown("### 🛠 **Actionable Recommendations**")
-
-    # 🛑 Preventive Maintenance for Top Causes
-    if not top_root_causes.empty:
-        for cause in top_root_causes.index:
-            st.write(f"- **Implement a Preventive Maintenance Plan for:** {cause}")
-
-    # ⚙️ Training & SOP Adjustments
-    if len(top_root_causes) > 1:
-        st.write("- **Review standard operating procedures (SOPs)** for recurring downtime issues.")
-        st.write("- **Provide additional training** for operators on handling the most common issues.")
-
-    # ⏱ Reducing High-Resolution Time
-    if not high_res_time_issues.empty:
-        st.write("- **Investigate downtime issues with unusually high resolution times** and optimize response strategies.")
-
-    # ⚡ Urgent Action Alert
-    if filtered_downtime["Time to Resolve (Minutes)"].mean() > 30:
-        st.warning("⚠️ High average resolution time detected! Consider faster troubleshooting processes.")
-
-
-
-######################################################################################3
-
-##################################################################################################################
-##################################################################################################################
-##################################################################################################################
+    # 📊 Downtime Statistics
+    st.subheader("📈 Downtime Statistics")
+    total_issues = len(filtered_downtime)
+    open_issues = len(filtered_downtime[filtered_downtime["Status"] != "Closed"])
+    closed_issues = total_issues - open_issues
+    avg_resolution_time = filtered_downtime["Time to Resolve (Minutes)"].mean()
+    
+    st.write(f"**Total Issues:** {total_issues}")
+    st.write(f"**Open Issues:** {open_issues}")
+    st.write(f"**Closed Issues:** {closed_issues}")
+    st.write(f"**Avg Resolution Time:** {avg_resolution_time:.2f} minutes")
+    
+    
+    # Update Downtime Status with Custom Resolution Time
+    st.subheader("Update Downtime Status")
+    if not downtime_data.empty:
+        # Format options as "Key - Process Name"
+        downtime_options = [f"{row['Key']} - {row['Process Name']}" for _, row in downtime_data.iterrows()]
+        selected_downtime = st.selectbox("Select Downtime Issue to Update (Key - Process Name)", 
+                                         downtime_options, key="downtime_selectbox")
+    
+        new_status = st.selectbox("Update Status", ["Open", "In Progress", "Closed"], key="downtime_status_selectbox")
+        
+        # Allow user to manually update resolution time
+        custom_resolution_time = st.text_input("Custom Resolution Time (YYYY-MM-DD HH:MM:SS)", value="")
+    
+        if st.button("Update Downtime Status"):
+            # Extract Key from the selection
+            selected_key = int(selected_downtime.split(" - ")[0])
+    
+            spreadsheet = client.open("Project Management")
+            worksheet = spreadsheet.worksheet("Downtime Issues")
+    
+            # Find the row index using the Key
+            row_index = selected_key + 1  # Adjust for 1-based index in Google Sheets
+    
+            worksheet.update_cell(row_index, worksheet.find("Status").col, new_status)
+    
+            # If status is marked as "Closed", update the resolution time
+            if new_status == "Closed":
+                resolution_time = custom_resolution_time if custom_resolution_time else datetime.now(est).strftime("%Y-%m-%d %H:%M:%S")
+                worksheet.update_cell(row_index, worksheet.find("Resolution Time").col, resolution_time)
+            
+            st.success(f"Status updated for Downtime Issue '{selected_downtime}' to '{new_status}' with Resolution Time '{resolution_time}'!")
+    
+    ##################################################################################################################
+    ##################################################################################################################
+    ##################################################################################################################
+    
+    
+    
+    
+    
+    
+    # 📊 Pareto Chart: Sorted by Total Downtime with Cumulative Line
+    st.subheader("Pareto Chart of Downtime Reasons (Sorted by Total Downtime)")
+    
+    if not filtered_downtime.empty and "Downtime Reason" in filtered_downtime.columns:
+        # Aggregate downtime per reason and sort from largest to smallest
+        pareto_data = (
+            filtered_downtime.groupby("Downtime Reason")["Time to Resolve (Minutes)"]
+            .sum()
+            .sort_values(ascending=False)
+        )
+    
+        # Compute cumulative percentage
+        cumulative_percentage = pareto_data.cumsum() / pareto_data.sum() * 100
+    
+        # Plotting with Matplotlib to ensure proper formatting
+        fig, ax1 = plt.subplots(figsize=(10, 5))
+    
+        # Bar chart (Downtime per Reason)
+        ax1.bar(pareto_data.index, pareto_data.values, color="blue", alpha=0.6, label="Total Downtime (Minutes)")
+        ax1.set_ylabel("Total Downtime (Minutes)", color="blue")
+        ax1.tick_params(axis="y", labelcolor="blue")
+        ax1.set_xticklabels(pareto_data.index, rotation=45, ha="right")
+    
+        # Secondary axis: Cumulative Pareto Line
+        ax2 = ax1.twinx()
+        ax2.plot(pareto_data.index, cumulative_percentage, color="red", marker="o", linestyle="-", label="Cumulative %")
+        ax2.set_ylabel("Cumulative Percentage (%)", color="red")
+        ax2.tick_params(axis="y", labelcolor="red")
+        ax2.set_ylim(0, 110)
+    
+        # Title and legend
+        ax1.set_title("Pareto Chart of Downtime Reasons")
+        fig.tight_layout()
+        st.pyplot(fig)
+    
+    
+    # 📉 Downtime Issues & AI Insights
+    st.header("📉 Downtime Issues & AI Insights")
+    
+    # Display filtered downtime data
+    #st.subheader("Downtime Issues Table")
+    #st.dataframe(filtered_downtime)
+    
+    # 📊 AI-Generated Insights
+    st.subheader("💡 AI-Powered Insights")
+    
+    if not filtered_downtime.empty:
+        filtered_downtime["Date"] = pd.to_datetime(filtered_downtime["Date"], errors='coerce')
+        filtered_downtime["Time to Resolve (Minutes)"] = pd.to_numeric(filtered_downtime["Time to Resolve (Minutes)"], errors='coerce')
+    
+        # 🚨 Identify Top 3 Frequent Root Causes
+        if "Root Cause" in filtered_downtime.columns:
+            root_cause_counts = filtered_downtime["Root Cause"].value_counts()
+            top_root_causes = root_cause_counts.head(3)
+    
+            st.markdown("### 🔥 **Top 3 Root Causes**")
+            for cause, count in top_root_causes.items():
+                st.write(f"- **{cause}**: {count} occurrences")
+    
+        # ⚠️ Flag High-Resolution Time Issues
+        high_res_time_issues = filtered_downtime[filtered_downtime["Time to Resolve (Minutes)"] > filtered_downtime["Time to Resolve (Minutes)"].mean()]
+        
+        if not high_res_time_issues.empty:
+            st.markdown("### ⏳ **High-Resolution Time Downtime Issues**")
+            st.dataframe(high_res_time_issues[["Key", "Process Name", "Downtime Reason", "Time to Resolve (Minutes)"]])
+    
+        # 📈 Trend Analysis for Recurring Issues
+        downtime_trend = filtered_downtime.groupby(filtered_downtime["Date"].dt.to_period("M"))["Time to Resolve (Minutes)"].sum()
+        downtime_trend.index = downtime_trend.index.to_timestamp()
+        
+        st.subheader("📈 Downtime Trend Analysis")
+        st.line_chart(downtime_trend)
+    
+    # 🔍 AI-Powered Suggestions
+    st.subheader("🚀 AI-Powered Suggestions for Improvement")
+    
+    if not filtered_downtime.empty:
+        st.markdown("### 🛠 **Actionable Recommendations**")
+    
+        # 🛑 Preventive Maintenance for Top Causes
+        if not top_root_causes.empty:
+            for cause in top_root_causes.index:
+                st.write(f"- **Implement a Preventive Maintenance Plan for:** {cause}")
+    
+        # ⚙️ Training & SOP Adjustments
+        if len(top_root_causes) > 1:
+            st.write("- **Review standard operating procedures (SOPs)** for recurring downtime issues.")
+            st.write("- **Provide additional training** for operators on handling the most common issues.")
+    
+        # ⏱ Reducing High-Resolution Time
+        if not high_res_time_issues.empty:
+            st.write("- **Investigate downtime issues with unusually high resolution times** and optimize response strategies.")
+    
+        # ⚡ Urgent Action Alert
+        if filtered_downtime["Time to Resolve (Minutes)"].mean() > 30:
+            st.warning("⚠️ High average resolution time detected! Consider faster troubleshooting processes.")
+    
+    
+    
+    ######################################################################################3
+    
+    ##################################################################################################################
+    ##################################################################################################################
+    ##################################################################################################################
 
 ### KPI Dashboard ###
 with tab2:
