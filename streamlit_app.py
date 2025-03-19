@@ -332,6 +332,12 @@ with tab3:
     st.header("🎯 Personal Productivity Tracker")
     productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
     
+    # Ensure "Responsible" and "Notes" columns exist
+    if "Responsible" not in productivity_data.columns:
+        productivity_data["Responsible"] = ""  # Default empty value
+    if "Notes" not in productivity_data.columns:
+        productivity_data["Notes"] = ""  # Default empty value
+    
     # Assign unique keys if missing
     if "Key" not in productivity_data.columns:
         productivity_data["Key"] = range(1, len(productivity_data) + 1)
@@ -347,63 +353,8 @@ with tab3:
     st.write(f"Completed Tasks: {completed_tasks}")
     st.write(f"Completion Rate: {completion_rate:.2f}%")
 
-    # High-Value and Low-Value Tasks
-    st.subheader("80/20 Time Blocking")
-    if not productivity_data.empty:
-        productivity_data['Due Date'] = pd.to_datetime(productivity_data['Due Date'], errors='coerce')
-        today = pd.to_datetime(date.today())
-        productivity_data['Days Until Due'] = (productivity_data['Due Date'] - today).dt.days
-
-        # Calculate Priority Score
-        def calculate_priority(row):
-            priority_score = 0
-            if row['Priority'] == 'High':
-                priority_score += 3
-            elif row['Priority'] == 'Medium':
-                priority_score += 2
-            else:
-                priority_score += 1
-
-            if row['Days Until Due'] <= 3:
-                priority_score += 3
-            elif row['Days Until Due'] <= 7:
-                priority_score += 2
-            elif row['Days Until Due'] <= 14:
-                priority_score += 1
-
-            return priority_score
-
-        productivity_data['Priority Score'] = productivity_data.apply(calculate_priority, axis=1)
-        sorted_tasks = productivity_data.sort_values(by='Priority Score', ascending=False)
-
-        # High-Value Tasks (Only Open or In Progress)
-        high_value_tasks = sorted_tasks[(sorted_tasks["Status"].isin(["Open", "In Progress"]))].head(int(len(sorted_tasks) * 0.2))
-        st.subheader("🔹 High-Value Tasks (Focus) - 20%")
-        st.dataframe(high_value_tasks[['Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
-        
-        st.subheader("⚠️ Low-Value Tasks (Delegate or Remove) - 80%")
-        status_filter = st.selectbox("Filter by Status", ["All", "Open", "In Progress", "Completed"], key="low_value_task_filter")
-        low_value_tasks = sorted_tasks.tail(int(len(sorted_tasks) * 0.8))
-        if status_filter != "All":
-            low_value_tasks = low_value_tasks[low_value_tasks["Status"] == status_filter]
-        st.dataframe(low_value_tasks[['Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
-
-    # Add New Task
-    st.subheader("Add New Task")
-    with st.form("goal_setting_form", clear_on_submit=True):
-        goal_name = st.text_input("Task Name")
-        goal_priority = st.selectbox("Priority", ["Low", "Medium", "High"])
-        goal_due_date = st.date_input("Due Date")
-        add_goal_btn = st.form_submit_button("Add Task")
-        if add_goal_btn:
-            new_goal = pd.DataFrame([[goal_name, goal_priority, goal_due_date, "Open", "", ""]], 
-                                    columns=["Task Name", "Priority", "Due Date", "Status", "Actual Close Date", "Notes"])
-            new_goal = new_goal.astype(str)
-            append_to_google_sheets(new_goal, "Project Management", "Personal Productivity")
-            st.success("Task added successfully!")
-
-    # **Update Task Status & Notes Section**
-    st.subheader("Update Task Status & Add Notes")
+    # **Update Task Details, Responsible Person & Notes**
+    st.subheader("Update Task, Responsible Person & Notes")
     if not productivity_data.empty and "Task Name" in productivity_data.columns:
         # Format selection as "Key - Task Name"
         task_options = [f"{row['Key']} - {row['Task Name']}" for _, row in productivity_data.iterrows()]
@@ -415,10 +366,17 @@ with tab3:
 
         # Editable Fields
         updated_name = st.text_input("Update Task Name", value=task_row["Task Name"])
-        updated_priority = st.selectbox("Update Priority", ["Low", "Medium", "High"], index=["Low", "Medium", "High"].index(task_row["Priority"]))
+        updated_priority = st.selectbox("Update Priority", ["Low", "Medium", "High"], 
+                                        index=["Low", "Medium", "High"].index(task_row["Priority"]))
         updated_due_date = st.date_input("Update Due Date", value=pd.to_datetime(task_row["Due Date"]).date())
-        updated_status = st.selectbox("Update Status", ["Not Started", "In Progress", "Completed"], index=["Not Started", "In Progress", "Completed"].index(task_row["Status"]))
-        updated_notes = st.text_area("Add or Update Notes", value=task_row["Notes"])
+        updated_status = st.selectbox("Update Status", ["Not Started", "In Progress", "Completed"], 
+                                      index=["Not Started", "In Progress", "Completed"].index(task_row["Status"]))
+        
+        # New "Responsible" field
+        updated_responsible = st.text_input("Assign Responsible Person", value=task_row.get("Responsible", ""))
+        
+        # Notes Field
+        updated_notes = st.text_area("Add or Update Notes", value=task_row.get("Notes", ""))
 
         # Submit Changes
         if st.button("Update Task Details"):
@@ -431,6 +389,7 @@ with tab3:
             worksheet.update_cell(row_index, worksheet.find("Priority").col, updated_priority)
             worksheet.update_cell(row_index, worksheet.find("Due Date").col, updated_due_date.strftime("%Y-%m-%d"))
             worksheet.update_cell(row_index, worksheet.find("Status").col, updated_status)
+            worksheet.update_cell(row_index, worksheet.find("Responsible").col, updated_responsible)
             worksheet.update_cell(row_index, worksheet.find("Notes").col, updated_notes)
 
             # Auto-add completion date if task is marked "Completed"
@@ -439,4 +398,3 @@ with tab3:
                 worksheet.update_cell(row_index, worksheet.find("Actual Close Date").col, completion_date)
 
             st.success(f"Task '{updated_name}' updated successfully!")
-
