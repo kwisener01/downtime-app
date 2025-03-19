@@ -347,12 +347,14 @@ with tab3:
     st.write(f"Completed Tasks: {completed_tasks}")
     st.write(f"Completion Rate: {completion_rate:.2f}%")
 
+    # High-Value and Low-Value Tasks
     st.subheader("80/20 Time Blocking")
     if not productivity_data.empty:
         productivity_data['Due Date'] = pd.to_datetime(productivity_data['Due Date'], errors='coerce')
         today = pd.to_datetime(date.today())
         productivity_data['Days Until Due'] = (productivity_data['Due Date'] - today).dt.days
 
+        # Calculate Priority Score
         def calculate_priority(row):
             priority_score = 0
             if row['Priority'] == 'High':
@@ -374,20 +376,19 @@ with tab3:
         productivity_data['Priority Score'] = productivity_data.apply(calculate_priority, axis=1)
         sorted_tasks = productivity_data.sort_values(by='Priority Score', ascending=False)
 
-      #  high_value_tasks = sorted_tasks.head(int(len(sorted_tasks) * 0.2))  # Top 20%
-        low_value_tasks = sorted_tasks.tail(int(len(sorted_tasks) * 0.8))  # Bottom 80%
-
         # High-Value Tasks (Only Open or In Progress)
         high_value_tasks = sorted_tasks[(sorted_tasks["Status"].isin(["Open", "In Progress"]))].head(int(len(sorted_tasks) * 0.2))
         st.subheader("🔹 High-Value Tasks (Focus) - 20%")
         st.dataframe(high_value_tasks[['Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
-               
+        
         st.subheader("⚠️ Low-Value Tasks (Delegate or Remove) - 80%")
         status_filter = st.selectbox("Filter by Status", ["All", "Open", "In Progress", "Completed"], key="low_value_task_filter")
+        low_value_tasks = sorted_tasks.tail(int(len(sorted_tasks) * 0.8))
         if status_filter != "All":
             low_value_tasks = low_value_tasks[low_value_tasks["Status"] == status_filter]
         st.dataframe(low_value_tasks[['Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
 
+    # Add New Task
     st.subheader("Add New Task")
     with st.form("goal_setting_form", clear_on_submit=True):
         goal_name = st.text_input("Task Name")
@@ -395,23 +396,47 @@ with tab3:
         goal_due_date = st.date_input("Due Date")
         add_goal_btn = st.form_submit_button("Add Task")
         if add_goal_btn:
-            new_goal = pd.DataFrame([[goal_name, goal_priority, goal_due_date, "Open", ""]], 
-                                    columns=["Task Name", "Priority", "Due Date", "Status", "Actual Close Date"])
+            new_goal = pd.DataFrame([[goal_name, goal_priority, goal_due_date, "Open", "", ""]], 
+                                    columns=["Task Name", "Priority", "Due Date", "Status", "Actual Close Date", "Notes"])
             new_goal = new_goal.astype(str)
             append_to_google_sheets(new_goal, "Project Management", "Personal Productivity")
             st.success("Task added successfully!")
-    
-    st.subheader("Update Task Status")
+
+    # **Update Task Status & Notes Section**
+    st.subheader("Update Task Status & Add Notes")
     if not productivity_data.empty and "Task Name" in productivity_data.columns:
-        task_options = [f"{index} {row['Task Name']}  {row['Priority']}  {row['Due Date']}" for index, row in productivity_data.iterrows()]
-        selected_task = st.selectbox("Select Task to Update", task_options, key="productivity_task_selectbox")
-        new_status = st.selectbox("Update Status", ["Not Started", "In Progress", "Completed"], key="productivity_status_selectbox")
-        if st.button("Update Task Status"):
+        # Format selection as "Key - Task Name"
+        task_options = [f"{row['Key']} - {row['Task Name']}" for _, row in productivity_data.iterrows()]
+        selected_task = st.selectbox("Select Task to Update", task_options, key="productivity_task_update_selectbox")
+
+        # Extract key and locate row
+        selected_key = int(selected_task.split(" - ")[0])
+        task_row = productivity_data[productivity_data["Key"] == selected_key].iloc[0]
+
+        # Editable Fields
+        updated_name = st.text_input("Update Task Name", value=task_row["Task Name"])
+        updated_priority = st.selectbox("Update Priority", ["Low", "Medium", "High"], index=["Low", "Medium", "High"].index(task_row["Priority"]))
+        updated_due_date = st.date_input("Update Due Date", value=pd.to_datetime(task_row["Due Date"]).date())
+        updated_status = st.selectbox("Update Status", ["Not Started", "In Progress", "Completed"], index=["Not Started", "In Progress", "Completed"].index(task_row["Status"]))
+        updated_notes = st.text_area("Add or Update Notes", value=task_row["Notes"])
+
+        # Submit Changes
+        if st.button("Update Task Details"):
             spreadsheet = client.open("Project Management")
             worksheet = spreadsheet.worksheet("Personal Productivity")
-            task_index = int(selected_task.split()[0])  # Extract Index
-            worksheet.update_cell(task_index + 2, worksheet.find("Status").col, new_status)
-            if new_status == "Completed":
-                current_date = datetime.now(est).strftime("%Y-%m-%d")
-                worksheet.update_cell(task_index + 2, worksheet.find("Actual Close Date").col, current_date)
-            st.success(f"Status updated for Task '{selected_task}' to '{new_status}'!")
+
+            # Locate row in Google Sheets
+            row_index = selected_key + 1  # Convert key to row number
+            worksheet.update_cell(row_index, worksheet.find("Task Name").col, updated_name)
+            worksheet.update_cell(row_index, worksheet.find("Priority").col, updated_priority)
+            worksheet.update_cell(row_index, worksheet.find("Due Date").col, updated_due_date.strftime("%Y-%m-%d"))
+            worksheet.update_cell(row_index, worksheet.find("Status").col, updated_status)
+            worksheet.update_cell(row_index, worksheet.find("Notes").col, updated_notes)
+
+            # Auto-add completion date if task is marked "Completed"
+            if updated_status == "Completed":
+                completion_date = datetime.now(est).strftime("%Y-%m-%d")
+                worksheet.update_cell(row_index, worksheet.find("Actual Close Date").col, completion_date)
+
+            st.success(f"Task '{updated_name}' updated successfully!")
+
