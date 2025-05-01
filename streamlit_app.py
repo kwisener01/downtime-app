@@ -51,9 +51,26 @@ if "data" not in st.session_state:
 
 # App title
 st.title("Operations Management Assistant")
+# Authenticate before rendering Tab 3
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
 
-# Create tabs
-tab1, tab2, tab3 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Productivity"])
+# If not authenticated, show password input first
+if not st.session_state.authenticated:
+    st.header("🔒 Enter Password to Access Personal Productivity")
+    password = st.text_input("Password", type="password")
+    if password == st.secrets.get("tab3_password", ""):
+        st.success("Access granted!")
+        st.session_state.authenticated = True
+    else:
+        st.warning("Enter the correct password to unlock productivity tools.")
+
+# Now create the tabs based on authentication
+if st.session_state.authenticated:
+    tab1, tab2, tab3 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Productivity"])
+else:
+    tab1, tab2 = st.tabs(["Downtime Issues", "KPI Dashboard"])
+
 
 # Load Downtime Data
 downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
@@ -329,19 +346,6 @@ with tab2:
 
 ### Personal Productivity ###
 with tab3:
-    st.header("🔒 Personal Productivity (Protected)")
-
-    if "authenticated" not in st.session_state:
-        st.session_state.authenticated = False
-
-    if not st.session_state.authenticated:
-        password = st.text_input("Enter password to access this section:", type="password")
-        if password == st.secrets.get("tab3_password", ""):
-            st.success("Access granted!")
-            st.session_state.authenticated = True
-        else:
-            st.warning("Enter the correct password to unlock productivity tools.")
-            st.stop()
 
     st.header("🎯 Personal Productivity Tracker")
     productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
