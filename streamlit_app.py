@@ -52,19 +52,27 @@ if "data" not in st.session_state:
 # App title
 st.title("Operations Management Assistant")
 
+
+
+# Manage authentication state for Tab 3
+if "authenticated_tab3" not in st.session_state:
+    st.session_state.authenticated_tab3 = False
+
 # Authenticate before rendering Tab 3
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
-# If not authenticated, show password input first
-if not st.session_state.authenticated:
-    st.header("🔒 Enter Password to Access Personal Productivity")
-    password = st.text_input("Password", type="password")
-    if password == st.secrets.get("tab3_password", ""):
-        st.success("Access granted!")
-        st.session_state.authenticated = True
-    else:
-        st.warning("Enter the correct password to unlock productivity tools.")
+if not st.session_state.authenticated_tab3:
+    with st.expander("🔒 Unlock Personal Productivity Tab"):
+        password_input = st.text_input("Enter Password", type="password")
+        if st.button("Unlock Tab"):
+            if password_input == st.secrets.get("tab3_password", ""):
+                st.session_state.authenticated_tab3 = True
+                st.success("Access granted! Reloading to show all features...")
+                st.experimental_rerun()
+            else:
+                st.error("Incorrect password. Try again.")
+
 
 # Now create the tabs based on authentication
 if st.session_state.authenticated:
@@ -75,6 +83,13 @@ else:
 
 # Load Downtime Data
 downtime_data = load_from_google_sheets("Project Management", "Downtime Issues")
+
+
+st.sidebar.markdown("### Session Control")
+if st.sidebar.button("🔓 Logout Tab 3"):
+    st.session_state.authenticated_tab3 = False
+    st.success("Logged out. Tab 3 is now hidden.")
+    st.experimental_rerun()
 
 
 ##################################################################################################################
