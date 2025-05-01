@@ -329,13 +329,27 @@ with tab2:
 
 ### Personal Productivity ###
 with tab3:
+    st.header("🔒 Personal Productivity (Protected)")
+
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+
+    if not st.session_state.authenticated:
+        password = st.text_input("Enter password to access this section:", type="password")
+        if password == st.secrets.get("tab3_password", ""):
+            st.success("Access granted!")
+            st.session_state.authenticated = True
+        else:
+            st.warning("Enter the correct password to unlock productivity tools.")
+            st.stop()
+
     st.header("🎯 Personal Productivity Tracker")
     productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
-    
+
     # Assign unique keys if missing
     if "Key" not in productivity_data.columns:
         productivity_data["Key"] = range(1, len(productivity_data) + 1)
-    
+
     st.subheader("Task Statistics")
     total_tasks = len(productivity_data)
     open_tasks = len(productivity_data[productivity_data["Status"] == "Open"])
@@ -374,14 +388,12 @@ with tab3:
         productivity_data['Priority Score'] = productivity_data.apply(calculate_priority, axis=1)
         sorted_tasks = productivity_data.sort_values(by='Priority Score', ascending=False)
 
-      #  high_value_tasks = sorted_tasks.head(int(len(sorted_tasks) * 0.2))  # Top 20%
-        low_value_tasks = sorted_tasks.tail(int(len(sorted_tasks) * 0.8))  # Bottom 80%
-
-        # High-Value Tasks (Only Open or In Progress)
+        low_value_tasks = sorted_tasks.tail(int(len(sorted_tasks) * 0.8))
         high_value_tasks = sorted_tasks[(sorted_tasks["Status"].isin(["Open", "In Progress"]))].head(int(len(sorted_tasks) * 0.2))
+
         st.subheader("🔹 High-Value Tasks (Focus) - 20%")
         st.dataframe(high_value_tasks[['Task Name', 'Priority', 'Due Date', 'Days Until Due', 'Priority Score', 'Status']])
-               
+
         st.subheader("⚠️ Low-Value Tasks (Delegate or Remove) - 80%")
         status_filter = st.selectbox("Filter by Status", ["All", "Open", "In Progress", "Completed"], key="low_value_task_filter")
         if status_filter != "All":
@@ -395,12 +407,12 @@ with tab3:
         goal_due_date = st.date_input("Due Date")
         add_goal_btn = st.form_submit_button("Add Task")
         if add_goal_btn:
-            new_goal = pd.DataFrame([[goal_name, goal_priority, goal_due_date, "Open", ""]], 
+            new_goal = pd.DataFrame([[goal_name, goal_priority, goal_due_date, "Open", ""]],
                                     columns=["Task Name", "Priority", "Due Date", "Status", "Actual Close Date"])
             new_goal = new_goal.astype(str)
             append_to_google_sheets(new_goal, "Project Management", "Personal Productivity")
             st.success("Task added successfully!")
-    
+
     st.subheader("Update Task Status")
     if not productivity_data.empty and "Task Name" in productivity_data.columns:
         task_options = [f"{index} {row['Task Name']}  {row['Priority']}  {row['Due Date']}" for index, row in productivity_data.iterrows()]
