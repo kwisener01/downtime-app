@@ -92,7 +92,7 @@ st.sidebar.markdown("### Session Control")
 if st.sidebar.button("🔓 Logout Tab 3"):
     st.session_state.authenticated_tab3 = False
     st.success("Logged out. Tab 3 is now hidden.")
-    st.experimental_rerun()
+    st.rerun()
 
 
 ##################################################################################################################
