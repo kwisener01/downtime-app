@@ -51,6 +51,7 @@ if "data" not in st.session_state:
 
 # App title
 st.title("Operations Management Assistant")
+
 # Authenticate before rendering Tab 3
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
@@ -346,6 +347,19 @@ with tab2:
 
 ### Personal Productivity ###
 with tab3:
+    st.header("🔒 Personal Productivity (Protected)")
+
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+
+    if not st.session_state.authenticated:
+        password = st.text_input("Enter password to access this section:", type="password")
+        if password == st.secrets.get("tab3_password", ""):
+            st.success("Access granted!")
+            st.session_state.authenticated = True
+        else:
+            st.warning("Enter the correct password to unlock productivity tools.")
+            st.stop()
 
     st.header("🎯 Personal Productivity Tracker")
     productivity_data = load_from_google_sheets("Project Management", "Personal Productivity")
