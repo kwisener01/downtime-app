@@ -69,7 +69,7 @@ if not st.session_state.authenticated_tab3:
             if password_input == st.secrets.get("tab3_password", ""):
                 st.session_state.authenticated_tab3 = True
                 st.success("Access granted! Reloading to show all features...")
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("Incorrect password. Try again.")
 
