@@ -74,11 +74,14 @@ if not st.session_state.authenticated_tab3:
                 st.error("Incorrect password. Try again.")
 
 
-# Now create the tabs based on authentication
-if st.session_state.authenticated:
-    tab1, tab2, tab3 = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Productivity"])
+if st.session_state.authenticated_tab3:
+    tabs = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Productivity"])
+    tab1, tab2, tab3 = tabs
 else:
-    tab1, tab2 = st.tabs(["Downtime Issues", "KPI Dashboard"])
+    tabs = st.tabs(["Downtime Issues", "KPI Dashboard"])
+    tab1, tab2 = tabs
+    tab3 = None  # Prevent NameError
+    
 
 
 # Load Downtime Data
@@ -361,8 +364,10 @@ with tab2:
 
 
 ### Personal Productivity ###
-with tab3:
-    st.header("🔒 Personal Productivity (Protected)")
+if tab3:
+    with tab3:
+        # All your Personal Productivity code goes here
+        st.header("🔒 Personal Productivity (Protected)")
 
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
