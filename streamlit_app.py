@@ -58,22 +58,15 @@ st.title("Operations Management Assistant")
 if "authenticated_tab3" not in st.session_state:
     st.session_state.authenticated_tab3 = False
 
-# Authenticate before rendering Tab 3
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-
 if not st.session_state.authenticated_tab3:
     with st.expander("🔒 Unlock Personal Productivity Tab"):
         password = st.text_input("Enter password to access this section:", type="password")
-            if password == st.secrets["tab3_password"]:
-                st.success("Access granted!")
-                st.session_state.authenticated = True
-
-                st.success("Access granted! Reloading to show all features...")
-                st.rerun()
-            else:
-                st.error("Incorrect password. Try again.")
-
+        if password == st.secrets["tab3_password"]:
+            st.session_state.authenticated_tab3 = True
+            st.success("Access granted! Reloading to show all features...")
+            st.rerun()
+        elif password != "":
+            st.error("Incorrect password. Try again.")
 
 if st.session_state.authenticated_tab3:
     tabs = st.tabs(["Downtime Issues", "KPI Dashboard", "Personal Productivity"])
@@ -82,7 +75,7 @@ else:
     tabs = st.tabs(["Downtime Issues", "KPI Dashboard"])
     tab1, tab2 = tabs
     tab3 = None  # Prevent NameError
-    
+
 
 
 # Load Downtime Data
