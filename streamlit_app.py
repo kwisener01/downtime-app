@@ -187,7 +187,50 @@ with tab1:
                 worksheet.update_cell(row_index, worksheet.find("Resolution Time").col, resolution_time)
             
             st.success(f"Status updated for Downtime Issue '{selected_downtime}' to '{new_status}' with Resolution Time '{resolution_time}'!")
-    
+
+
+    # Edit Full Downtime Entry (Mobile-Friendly with Expander)
+st.subheader("✏️ Edit Downtime Entry")
+
+if not downtime_data.empty:
+    selected_entry = st.selectbox("Select Downtime Entry to Edit", [f"{row['Key']} - {row['Process Name']}" for _, row in downtime_data.iterrows()])
+
+    selected_key = int(selected_entry.split(" - ")[0])
+    row_data = downtime_data[downtime_data["Key"] == selected_key].iloc[0]
+
+    with st.expander("Edit Selected Entry"):
+        with st.form("edit_downtime_form"):
+            date_edit = st.date_input("Date", value=pd.to_datetime(row_data["Date"]))
+            time_edit = st.text_input("Time (HH:MM:SS)", value=row_data["Time"])
+            process_edit = st.text_input("Process Name", value=row_data["Process Name"])
+            reason_edit = st.text_input("Downtime Reason", value=row_data["Downtime Reason"])
+            action_edit = st.text_input("Action Taken", value=row_data["Action Taken"])
+            root_edit = st.text_input("Root Cause", value=row_data["Root Cause"])
+            minutes_edit = st.number_input("Time to Resolve (Minutes)", min_value=0, step=1, value=int(row_data["Time to Resolve (Minutes)"]))
+            resolved_edit = st.selectbox("Resolved?", ["Y", "N"], index=0 if row_data["Resolved (Y/N)"] == "Y" else 1)
+            status_edit = st.selectbox("Status", ["Open", "In Progress", "Closed"], index=["Open", "In Progress", "Closed"].index(row_data["Status"]))
+            resolution_time_edit = st.text_input("Resolution Time", value=row_data.get("Resolution Time", ""))
+
+            update_btn = st.form_submit_button("Update Entry")
+
+            if update_btn:
+                spreadsheet = client.open("Project Management")
+                worksheet = spreadsheet.worksheet("Downtime Issues")
+                row_index = selected_key + 1  # Google Sheets is 1-indexed and header is in first row
+
+                worksheet.update_cell(row_index, worksheet.find("Date").col, date_edit.strftime("%Y-%m-%d"))
+                worksheet.update_cell(row_index, worksheet.find("Time").col, time_edit)
+                worksheet.update_cell(row_index, worksheet.find("Process Name").col, process_edit)
+                worksheet.update_cell(row_index, worksheet.find("Downtime Reason").col, reason_edit)
+                worksheet.update_cell(row_index, worksheet.find("Action Taken").col, action_edit)
+                worksheet.update_cell(row_index, worksheet.find("Root Cause").col, root_edit)
+                worksheet.update_cell(row_index, worksheet.find("Time to Resolve (Minutes)").col, str(minutes_edit))
+                worksheet.update_cell(row_index, worksheet.find("Resolved (Y/N)").col, resolved_edit)
+                worksheet.update_cell(row_index, worksheet.find("Status").col, status_edit)
+                worksheet.update_cell(row_index, worksheet.find("Resolution Time").col, resolution_time_edit)
+
+                st.success(f"Downtime entry for Key {selected_key} updated successfully!")
+
     ##################################################################################################################
     ##################################################################################################################
     ##################################################################################################################
