@@ -233,14 +233,14 @@ with tab1:
         st.pyplot(fig)
     
     
-    # 📉 Downtime Issues & AI Insights
+    # 📉 Downtime Issues & Insights
     st.header("📉 Downtime Issues & AI Insights")
     
     # Display filtered downtime data
     #st.subheader("Downtime Issues Table")
     #st.dataframe(filtered_downtime)
     
-    # 📊 AI-Generated Insights
+    # 📊  Insights
     st.subheader("💡 Data Insights")
     
     if not filtered_downtime.empty:
