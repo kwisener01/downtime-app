@@ -258,46 +258,39 @@ with tab1:
     
     
     
-    
-    # 📊 Pareto Chart: Sorted by Total Downtime with Cumulative Line
-    st.subheader("Pareto Chart of Downtime Reasons (Sorted by Total Downtime)")
+# 📊 Pareto Chart: Sorted by Total Downtime with Cumulative Line
+st.subheader("Pareto Chart of Downtime Reasons (Sorted by Total Downtime)")
 
-    if not filtered_downtime.empty and "Downtime Reason" in filtered_downtime.columns:
-        # Aggregate downtime per reason and sort from largest to smallest
-        pareto_data = (
-            filtered_downtime.groupby("Downtime Reason")["Time to Resolve (Minutes)"]
-            .sum()
-            .sort_values(ascending=False)
-        )
+if not filtered_downtime.empty and "Downtime Reason" in filtered_downtime.columns:
+    pareto_data = (
+        filtered_downtime.groupby("Downtime Reason")["Time to Resolve (Minutes)"]
+        .sum()
+        .sort_values(ascending=False)
+    )
 
-        total_downtime = pareto_data.sum()
-        if total_downtime == 0:
-            st.info("No downtime data to display. Total downtime is zero.")
-        else:
-            # Compute cumulative percentage
-            cumulative_percentage = pareto_data.cumsum() / total_downtime * 100
-    
-            # Plotting with Matplotlib to ensure proper formatting
-            fig, ax1 = plt.subplots(figsize=(10, 5))
-    
-            # Bar chart (Downtime per Reason)
-            ax1.bar(pareto_data.index, pareto_data.values, alpha=0.6, label="Total Downtime (Minutes)")
-            ax1.set_ylabel("Total Downtime (Minutes)")
-            ax1.tick_params(axis="y")
-            ax1.set_xticklabels(pareto_data.index, rotation=45, ha="right")
-    
-            # Secondary axis: Cumulative Pareto Line
-            ax2 = ax1.twinx()
-            ax2.plot(pareto_data.index, cumulative_percentage, marker="o", linestyle="-", color="red", label="Cumulative %")
-            ax2.set_ylabel("Cumulative Percentage (%)")
-            ax2.tick_params(axis="y")
-            ax2.set_ylim(0, 110)
-    
-            ax1.set_title("Pareto Chart of Downtime Reasons")
-            fig.tight_layout()
-            st.pyplot(fig)
+    total_downtime = pareto_data.sum()
 
-    
+    if pareto_data.empty or total_downtime == 0:
+        st.info("No downtime data available to display a Pareto chart.")
+    else:
+        cumulative_percentage = pareto_data.cumsum() / total_downtime * 100
+
+        fig, ax1 = plt.subplots(figsize=(10, 5))
+        ax1.bar(pareto_data.index, pareto_data.values, alpha=0.6, label="Total Downtime (Minutes)")
+        ax1.set_ylabel("Total Downtime (Minutes)")
+        ax1.tick_params(axis="y")
+        ax1.set_xticklabels(pareto_data.index, rotation=45, ha="right")
+
+        ax2 = ax1.twinx()
+        ax2.plot(pareto_data.index, cumulative_percentage, marker="o", linestyle="-", color="red", label="Cumulative %")
+        ax2.set_ylabel("Cumulative Percentage (%)")
+        ax2.tick_params(axis="y")
+        ax2.set_ylim(0, 110)
+
+        ax1.set_title("Pareto Chart of Downtime Reasons")
+        fig.tight_layout()
+        st.pyplot(fig)
+
     
     # 📉 Downtime Issues & Insights
     st.header("📉 Downtime Issues & Insights")
