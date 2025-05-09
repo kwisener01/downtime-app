@@ -241,7 +241,7 @@ with tab1:
     #st.dataframe(filtered_downtime)
     
     # 📊 AI-Generated Insights
-    st.subheader("💡 AI-Powered Insights")
+    st.subheader("💡 Data Insights")
     
     if not filtered_downtime.empty:
         filtered_downtime["Date"] = pd.to_datetime(filtered_downtime["Date"], errors='coerce')
@@ -270,8 +270,8 @@ with tab1:
         st.subheader("📈 Downtime Trend Analysis")
         st.line_chart(downtime_trend)
     
-    # 🔍 AI-Powered Suggestions
-    st.subheader("🚀 AI-Powered Suggestions for Improvement")
+    # 🔍 Suggestions
+    st.subheader("🚀 Suggestions for Improvement")
     
     if not filtered_downtime.empty:
         st.markdown("### 🛠 **Actionable Recommendations**")
