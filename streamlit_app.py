@@ -234,7 +234,7 @@ with tab1:
     
     
     # 📉 Downtime Issues & Insights
-    st.header("📉 Downtime Issues & AI Insights")
+    st.header("📉 Downtime Issues & Insights")
     
     # Display filtered downtime data
     #st.subheader("Downtime Issues Table")
